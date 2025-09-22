@@ -2,7 +2,7 @@
 // Main export file for all heatmap components
 
 export { HeatmapVisualization } from './HeatmapVisualization';
-export { HeatmapAnalyticsDashboard } from './HeatmapAnalyticsDashboard';
+export { default as HeatmapAnalyticsDashboard } from './HeatmapAnalyticsDashboard';
 export { 
   HeatmapControls,
   HeatmapLegend,

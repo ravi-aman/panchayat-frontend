@@ -12,16 +12,7 @@ const HeatmapAnalyticsPage: React.FC = () => {
       </div>
       
       <div className="h-[calc(100vh-200px)]">
-        <HeatmapAnalyticsDashboard 
-          bounds={{
-            southwest: [-122.4594, 37.7349], // [lng, lat]
-            northeast: [-122.4194, 37.7749]  // [lng, lat]
-          }}
-          timeRange={{
-            start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-            end: new Date()
-          }}
-        />
+        <HeatmapAnalyticsDashboard />
       </div>
     </div>
   );
