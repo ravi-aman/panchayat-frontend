@@ -47,7 +47,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, authRoute = f
       color: 'error',
     });
   }
-  console.log(location, 'location in protected route');
+  
+  // Use structured logging instead of object logging
+  console.log("Path:", location.pathname, "State:", JSON.stringify(location.state || {}), "- location in protected route");
+  
   if (location.pathname === '/' && valid && location.state?.from == null) {
     return <Navigate to="/dashboard/startups" replace />;
   }

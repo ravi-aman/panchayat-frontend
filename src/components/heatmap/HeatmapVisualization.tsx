@@ -12,6 +12,7 @@ import {
 import { useHeatmapData } from '../../hooks/useHeatmapData';
 import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
 import MapLibreMap from './MapLibreMap';
+import { useMap } from '../../contexts/MapContext';
 import { 
   HeatmapControls, 
   HeatmapLegend, 
@@ -63,6 +64,8 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
   onBoundsChange,
   onDataUpdate
 }) => {
+  const { setMapInstance } = useMap();
+  
   // ===== STATE MANAGEMENT =====
   
   const [bounds, setBounds] = useState<RegionBounds>(initialBounds);
@@ -346,6 +349,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
             onClusterClick={handleClusterClick}
             onAnomalyClick={handleAnomalyClick}
             isLoading={isLoading}
+            onMapInstanceReady={(map) => setMapInstance(map)}
           />
 
           {/* Controls Panel */}

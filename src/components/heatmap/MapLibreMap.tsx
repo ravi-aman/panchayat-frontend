@@ -31,6 +31,7 @@ interface MapLibreMapProps {
   onClusterClick: (cluster: HeatmapCluster, event: React.MouseEvent) => void;
   onAnomalyClick: (anomaly: HeatmapAnomaly, event: React.MouseEvent) => void;
   isLoading: boolean;
+  onMapInstanceReady?: (map: maplibregl.Map) => void;
 }
 
 // Advanced rendering configuration
@@ -51,7 +52,8 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
   layerVisibility,
   onBoundsChange,
   onPointClick,
-  isLoading
+  isLoading,
+  onMapInstanceReady,
 }) => {
   // Map container references
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -194,6 +196,13 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
     map.addControl(new maplibregl.FullscreenControl(), 'top-right');
 
     mapRef.current = map;
+
+    // Notify when map is ready
+    map.on('load', () => {
+      if (onMapInstanceReady) {
+        onMapInstanceReady(map);
+      }
+    });
 
     // Setup advanced event handlers
     setupEventHandlers(map);
@@ -547,9 +556,9 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
         style={{ position: 'relative' }}
       />
       
-      {/* Performance metrics overlay */}
+      Performance metrics overlay
       {currentLODLevel && (
-        <div className="performance-overlay absolute top-4 left-4 bg-black bg-opacity-70 text-white p-2 rounded text-xs">
+        <div className="performance-overlay absolute top-4 left-4 bg-white bg-opacity-70 text-black p-2 rounded text-xs">
           <div>LOD: {currentLODLevel.name}</div>
           <div>Features: {data.dataPoints?.length || 0}</div>
           {isOffline && <div className="text-orange-400">📱 Offline</div>}
@@ -567,7 +576,7 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
       )}
       
       {/* Advanced status indicator */}
-      <div className="absolute bottom-4 right-4 space-y-2">
+      {/* <div className="absolute bottom-4 right-4 space-y-2">
         <div className="bg-white rounded shadow p-2 text-xs space-y-1">
           <div className="font-medium mb-2">Advanced Features</div>
           <div className={`flex items-center space-x-1 ${config.enableH3Clustering ? 'text-green-600' : 'text-gray-400'}`}>
@@ -591,7 +600,7 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
             <span>Offline Mode</span>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
