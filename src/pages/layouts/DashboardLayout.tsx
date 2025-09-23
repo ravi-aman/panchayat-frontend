@@ -18,7 +18,7 @@ const DashboardLayout = () => {
           <div className="hidden md:flex">
             <Sidebar />
           </div>
-          <div className="flex md:mt-[5rem] md:ml-[18rem] md:w-[75%] w-full h-full max-sm:pt-14">
+          <div className="flex md:mt-[4rem] md:ml-[15rem] md:w-[100%] w-full h-full max-sm:pt-14">
             <Outlet />
           </div>
 

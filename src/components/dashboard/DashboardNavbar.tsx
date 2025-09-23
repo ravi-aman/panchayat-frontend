@@ -40,9 +40,9 @@ const DashboardNavbar: React.FC = () => {
       <div className="flex items-center space-x-4">
         <div className="flex items-center pr-36">
           <img
-            src="/logo.png"
-            alt="Neecop Logo"
-            className="h-8 cursor-pointer"
+            src="/assets/logo1.png"
+            alt="Panchayat"
+            className="h-14 cursor-pointer"
             onClick={() => (window.location.href = '/')}
           />
         </div>
