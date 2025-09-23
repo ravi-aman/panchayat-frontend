@@ -197,9 +197,16 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
     mapRef.current = map;
 
-    // Notify when map is ready
+    // Notify immediately that map is available 
+    if (onMapInstanceReady) {
+      console.log('Notifying map is ready immediately');
+      onMapInstanceReady(map);
+    }
+
+    // Also notify when fully loaded
     map.on('load', () => {
       if (onMapInstanceReady) {
+        console.log('Map fully loaded event');
         onMapInstanceReady(map);
       }
     });
@@ -558,7 +565,7 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
       
       Performance metrics overlay
       {currentLODLevel && (
-        <div className="performance-overlay absolute top-4 left-4 bg-white bg-opacity-70 text-black p-2 rounded text-xs">
+        <div className="performance-overlay absolute  md:top-4 left-4 bg-white bg-opacity-70 text-black p-2 rounded text-xs">
           <div>LOD: {currentLODLevel.name}</div>
           <div>Features: {data.dataPoints?.length || 0}</div>
           {isOffline && <div className="text-orange-400">📱 Offline</div>}

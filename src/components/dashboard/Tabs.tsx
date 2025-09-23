@@ -6,10 +6,9 @@ import { useToast } from '../../contexts/toast/toastContext';
 import { Profile } from '../../types/types';
 
 const tabs = [
-  { href: '/dashboard/funds', icon: '/dashboard/dashboard.png', label: 'Funds' },
-  { href: '/dashboard/reports', icon: '/dashboard/funds.png', label: 'Reports' },
+  { href: '/dashboard/feed', icon: '/dashboard/dashboard.png', label: 'Explore' },
+  { href: '/dashboard/heatmap', icon: '/dashboard/funds.png', label: 'Heatmap' },
   { href: '/startup/register', icon: '/dashboard/plus.png', label: 'Create', special: true },
-  { href: '/dashboard/heatmap', icon: '/dashboard/dashboard.png', label: 'Heatmap' },
   { href: '/dashboard/startups', icon: '/dashboard/knowledge.png', label: 'Startups' },
 ];
 

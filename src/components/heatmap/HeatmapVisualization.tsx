@@ -353,18 +353,18 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
             onMapInstanceReady={(map) => setMapInstance(map)}
           />
 
-          {/* SearchAndNavigate overlay */}
-          <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50">
-            <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-lg p-2">
+          {/* SearchAndNavigate overlay - MOBILE ONLY */}
+          <div className="absolute top-5 left-4 right-4 md:hidden z-50">
+            <div className="bg-white rounded-full">
               {mapInstance ? (
                 <SearchAndNavigate 
                   map={mapInstance}
                   className="w-full search-and-navigate-input"
                   placeholder="Search for locations..."
-                  mobile={window.innerWidth < 768}
+                  mobile={true}
                   darkMode={false}
                   onLocationSelect={(location) => {
-                    console.log('Selected location:', location);
+                    console.log('Selected location from mobile:', location);
                     if (location.geometry?.coordinates) {
                       const [longitude, latitude] = location.geometry.coordinates;
                       const buffer = 0.01; // ~1km buffer

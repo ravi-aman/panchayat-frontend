@@ -6,10 +6,12 @@ import { Profile } from '../../types/types';
 import { useToast } from '../../contexts/toast/toastContext';
 import { useLocation } from 'react-router-dom';
 import { useMap } from '../../contexts/MapContext';
+import SearchAndNavigate from '../common/SearchAndNavigate';
 
 const DashboardNavbar: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
 
   const { logout, isAuthenticated, user, activeProfile, UpdateActiveProfile } = useAuth();
   const location = useLocation();
@@ -17,6 +19,25 @@ const DashboardNavbar: React.FC = () => {
   
   // Use the map context properly
   const { mapInstance } = useMap();
+  
+  // Log when map instance changes for debugging
+  useEffect(() => {
+    if (isHeatmapPage) {
+      console.log('DashboardNavbar: Map instance status:', mapInstance ? 'Available' : 'Not available', mapInstance);
+    }
+  }, [mapInstance, isHeatmapPage]);
+  
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Log when map instance changes
   useEffect(() => {
@@ -51,6 +72,43 @@ const DashboardNavbar: React.FC = () => {
   console.log(activeProfile);
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-white shadow-md">
+      {/* Mobile search overlay for heatmap page */}
+      {isHeatmapPage && (
+        <div className="absolute top-20 left-4 right-4 md:hidden z-50">
+          <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-lg p-2">
+            {mapInstance ? (
+              <SearchAndNavigate 
+                map={mapInstance}
+                className="w-full search-and-navigate-input"
+                placeholder="Search for locations..."
+                mobile={true}
+                darkMode={false}
+                onLocationSelect={(location) => {
+                  console.log('Selected location from mobile:', location);
+                  if (location.geometry?.coordinates) {
+                    const [longitude, latitude] = location.geometry.coordinates;
+                    // Trigger map to fly to this location
+                    if (mapInstance) {
+                      mapInstance.flyTo({
+                        center: [longitude, latitude],
+                        zoom: 14,
+                        essential: true,
+                        duration: 2000
+                      });
+                    }
+                  }
+                }}
+              />
+            ) : (
+              <div className="flex items-center w-full p-2">
+                <div className="w-6 h-6 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                <span className="text-sm text-gray-600">Loading map...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center space-x-4">
         <div className="flex items-center pr-36">
           <img
@@ -62,22 +120,41 @@ const DashboardNavbar: React.FC = () => {
         </div>
         {isHeatmapPage ? (
           <div className="relative flex items-center px-3 py-1 rounded-md w-80">
-            {/* Only display SearchAndNavigate when on heatmap page */}
-            <div className="flex items-center w-full">
-              <img src="/dashboard/search.png" alt="Search" className="h-[22px] w-[22px]" />
-              <input
-                type="text"
+            {/* Desktop view - use full SearchAndNavigate in navbar */}
+            {mapInstance ? (
+              <SearchAndNavigate 
+                map={mapInstance}
+                className="w-full"
                 placeholder="Search for locations..."
-                className="ml-2 text-gray-700 border-none outline-none bg-none w-full"
-                onClick={() => {
-                  // This input just triggers the SearchAndNavigate component inside the map
-                  const searchInput = document.querySelector('.search-and-navigate-input');
-                  if (searchInput && searchInput instanceof HTMLElement) {
-                    searchInput.focus();
+                darkMode={false}
+                mobile={isMobile}
+                onLocationSelect={(location) => {
+                  console.log('Selected location from navbar:', location);
+                  if (location.geometry?.coordinates) {
+                    const [longitude, latitude] = location.geometry.coordinates;
+                    // Trigger map to fly to this location
+                    if (mapInstance) {
+                      mapInstance.flyTo({
+                        center: [longitude, latitude],
+                        zoom: 14,
+                        essential: true,
+                        duration: 2000
+                      });
+                    }
                   }
                 }}
               />
-            </div>
+            ) : (
+              <div className="flex items-center w-full">
+                <img src="/dashboard/search.png" alt="Search" className="h-[22px] w-[22px]" />
+                <input
+                  type="text"
+                  placeholder="Loading map..."
+                  className="ml-2 text-gray-500 border-none outline-none bg-none cursor-not-allowed w-full"
+                  disabled
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div className="relative flex items-center px-3 py-1 rounded-md">

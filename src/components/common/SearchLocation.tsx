@@ -41,8 +41,7 @@ const SearchLocation: React.FC<SearchLocationProps> = ({
   onLocationSelect,
   placeholder = 'Search for a location...',
   className = '',
-  mobile = false,
-  darkMode = false,
+
   apiUrl = 'https://photon.komoot.io/api'
 }) => {
   const [query, setQuery] = useState<string>('');

@@ -3,7 +3,6 @@ import { MapProvider } from '../../contexts/MapContext';
 import { RegionBounds } from '../../types/heatmap';
 import { HeatmapVisualization } from './HeatmapVisualization';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
-import SearchLocation from '../common/SearchLocation';
 
 interface AdvancedHeatmapDashboardProps {
   className?: string;
@@ -68,8 +67,8 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
 
         {/* Mobile Search Overlay - Only visible on mobile */}
         <div className="absolute top-4 left-4 right-4 z-50 md:hidden">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30">
-            <div className="p-3">
+          {/* <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30"> */}
+            {/* <div className="p-3">
               <SearchLocation 
                 placeholder="Search for locations..." 
                 className="w-full"
@@ -86,12 +85,12 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                   }
                 }}
               />
-            </div>
-          </div>
+            </div> */}
+          {/* </div> */}
         </div>
 
         {/* Compact Stats Card - Top Right Corner */}
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50 hidden md:block">
           <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/20 p-3 md:p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-1">
