@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Profile } from '../../types/types';
 import { useToast } from '../../contexts/toast/toastContext';
-import SearchLocation from '../common/SearchLocation';
 import { useLocation } from 'react-router-dom';
 import { useMap } from '../../contexts/MapContext';
 
@@ -16,14 +15,15 @@ const DashboardNavbar: React.FC = () => {
   const location = useLocation();
   const isHeatmapPage = location.pathname.includes('/dashboard/heatmap');
   
-  // Safe access to map context - will only use it if available
-  let mapInstance = null;
-  try {
-    const mapContext = useMap();
-    mapInstance = mapContext?.mapInstance;
-  } catch (error) {
-    console.log('Map context not available, search functionality limited');
-  }
+  // Use the map context properly
+  const { mapInstance } = useMap();
+
+  // Log when map instance changes
+  useEffect(() => {
+    if (isHeatmapPage) {
+      console.log('Map instance status:', mapInstance ? 'Available' : 'Not available');
+    }
+  }, [mapInstance, isHeatmapPage]);
 
   const { totalUnreadCount } = useUnreadMessage();
   const toast = useToast();
@@ -61,16 +61,23 @@ const DashboardNavbar: React.FC = () => {
           />
         </div>
         {isHeatmapPage ? (
-          <div className="relative flex items-center px-3 py-1 rounded-md w-64">
-            <SearchLocation 
-              placeholder="Search for locations..." 
-              map={mapInstance}
-              className="w-full"
-              onLocationSelect={(location) => {
-                // Optional callback when location is selected
-                console.log('Selected location:', location);
-              }}
-            />
+          <div className="relative flex items-center px-3 py-1 rounded-md w-80">
+            {/* Only display SearchAndNavigate when on heatmap page */}
+            <div className="flex items-center w-full">
+              <img src="/dashboard/search.png" alt="Search" className="h-[22px] w-[22px]" />
+              <input
+                type="text"
+                placeholder="Search for locations..."
+                className="ml-2 text-gray-700 border-none outline-none bg-none w-full"
+                onClick={() => {
+                  // This input just triggers the SearchAndNavigate component inside the map
+                  const searchInput = document.querySelector('.search-and-navigate-input');
+                  if (searchInput && searchInput instanceof HTMLElement) {
+                    searchInput.focus();
+                  }
+                }}
+              />
+            </div>
           </div>
         ) : (
           <div className="relative flex items-center px-3 py-1 rounded-md">

@@ -13,6 +13,7 @@ import { useHeatmapData } from '../../hooks/useHeatmapData';
 import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
 import MapLibreMap from './MapLibreMap';
 import { useMap } from '../../contexts/MapContext';
+import SearchAndNavigate from '../common/SearchAndNavigate';
 import { 
   HeatmapControls, 
   HeatmapLegend, 
@@ -64,7 +65,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
   onBoundsChange,
   onDataUpdate
 }) => {
-  const { setMapInstance } = useMap();
+  const { mapInstance, setMapInstance } = useMap();
   
   // ===== STATE MANAGEMENT =====
   
@@ -351,6 +352,37 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
             isLoading={isLoading}
             onMapInstanceReady={(map) => setMapInstance(map)}
           />
+
+          {/* SearchAndNavigate overlay */}
+          <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50">
+            <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-lg p-2">
+              {mapInstance ? (
+                <SearchAndNavigate 
+                  map={mapInstance}
+                  className="w-full search-and-navigate-input"
+                  placeholder="Search for locations..."
+                  mobile={window.innerWidth < 768}
+                  darkMode={false}
+                  onLocationSelect={(location) => {
+                    console.log('Selected location:', location);
+                    if (location.geometry?.coordinates) {
+                      const [longitude, latitude] = location.geometry.coordinates;
+                      const buffer = 0.01; // ~1km buffer
+                      handleBoundsChange({
+                        southwest: [longitude - buffer, latitude - buffer],
+                        northeast: [longitude + buffer, latitude + buffer]
+                      });
+                    }
+                  }}
+                />
+              ) : (
+                <div className="flex items-center w-full p-2">
+                  <div className="w-6 h-6 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                  <span className="text-sm text-gray-600">Map loading...</span>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Controls Panel */}
           {enableControls && (
