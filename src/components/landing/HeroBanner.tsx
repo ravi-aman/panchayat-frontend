@@ -21,24 +21,24 @@ const HeroBanner = () => {
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 max-sm:gap-10 relative z-20">
           <div className="w-fit">
             <h1 className="text-white text-5xl max-sm:text-3xl font-bold leading-tight">
-              From Entrepreneurial Mindset to a Successful Business Venture
+              From Everyday Problems to Community-Driven Solutions
             </h1>
           </div>
           <div className="w-1/2 max-sm:w-full space-y-4">
             <FeatureCard
               icon="/landing/1.png"
-              title="Connection"
-              description="Instantly access a network of like-minded entrepreneurs, investors, and business partners."
+              title="Community Power"
+              description="Report and support issues together with your neighbors, making every voice count in shaping a better city."
             />
             <FeatureCard
               icon="/landing/2.png"
-              title="Financial Literacy"
-              description="Get tailored resources to enhance financial planning, budgeting, and investment decision-making."
+              title="Smart Tracking"
+              description="Follow your report in real time with live maps, updates, and notifications at every stage."
             />
             <FeatureCard
               icon="/landing/3.png"
-              title="Policy Understanding"
-              description="Stay informed about government policies, compliance regulations, and incentives for businesses."
+              title="Trusted Resolution"
+              description="Seamlessly connect with the right municipal department and ensure issues are resolved transparently."
             />
           </div>
         </div>

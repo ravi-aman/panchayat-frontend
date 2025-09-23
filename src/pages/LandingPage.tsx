@@ -6,11 +6,11 @@ import HeroBanner from '../components/landing/HeroBanner';
 import OurValues from '../components/landing/OurValue';
 import SublimeProducts from '../components/landing/sublimeProduct';
 import PowerSection from '../components/landing/Power';
-// import MeetStellar from "../components/landing/MeetStellar";
 import FAQ from '../components/landing/FAQ';
 import Ready from '../components/landing/Ready';
 import Footer from '../components/landing/Footer';
-// import Step from "../components/landing/Step";
+import Step from '../components/landing/Step';
+import MeetStellar from '../components/landing/MeetStellar';
 
 function LandingPage() {
   useEffect(() => {
@@ -28,10 +28,10 @@ function LandingPage() {
         <Navbar />
         <Hero />
         <HeroBanner />
-        {/* <Step/> */}
+        <Step />
         <OurValues />
         <SublimeProducts />
-        {/* <MeetStellar /> */}
+        <MeetStellar />
         <PowerSection />
         <Ready />
         <FAQ />

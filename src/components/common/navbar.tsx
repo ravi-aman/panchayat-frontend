@@ -26,8 +26,8 @@ export default function Navbar() {
           )}
         </button>
         <motion.img
-          src="./logo.png"
-          alt="Logo"
+          src="./assets/logo1.png"
+          alt="panchayat"
           className="w-35 hover:cursor-pointer"
           whileHover={{ scale: 1.05 }}
         />
@@ -37,7 +37,7 @@ export default function Navbar() {
         className={`bg-white max-sm:${isMenuOpen ? 'block' : 'hidden'} shadow-md px-10 py-4 flex max-sm:flex-col max-sm:h-[90vh] items-center max-sm:justify-around justify-between`}
       >
         <motion.img
-          src="./logo.png"
+          src="./assets/logo1.png"
           alt="Logo"
           className="w-35 hover:cursor-pointer max-sm:hidden"
           whileHover={{ scale: 1.05 }}
@@ -76,11 +76,11 @@ export default function Navbar() {
           )}
 
           <motion.a
-            href="/dashboard/startups"
+            href="/dashboard/feed"
             className="border-2 max-sm:w-fit max-sm:self-center border-blue-700 py-1 px-6  rounded-[8px] text-blue-700 hover:bg-blue-600 hover:text-white transition duration-300 font-bold"
             whileHover={{ scale: 1.05 }}
           >
-            Startups
+            Explore
           </motion.a>
         </div>
       </div>

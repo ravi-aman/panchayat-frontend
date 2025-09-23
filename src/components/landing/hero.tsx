@@ -2,11 +2,10 @@ function Hero() {
   return (
     <div className="text-center mt-40">
       <h1 className="font-bold text-[65px] max-sm:text-[40px]">
-        Bridging Future <span className=" text-blue-700">Partnerships</span>
+        Report Today, Build Tomorrow’s <span className=" text-blue-700"> Future </span>
       </h1>
       <p className="text-[17px] my-3  text-gray-600 max-sm:px-5">
-        Simplify investments in Startups & MSMEs with our efficient, user-friendly financial
-        solution.
+        Empower your voice, drive accountability, and help create sustainable, people-first cities.
       </p>
       <button
         onClick={() => (window.location.href = '/dashboard/startups')}

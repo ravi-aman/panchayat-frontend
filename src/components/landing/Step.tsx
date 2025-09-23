@@ -12,7 +12,7 @@ const Step = () => {
           className="title-section max-w-[500px] text-left"
         >
           <p className="text-blue-500 uppercase font-semibold text-sm mb-2">
-            Find the best Business Venture/Msme to invest
+           From Civic Challenges to a Future-Ready City
           </p>
           <h1 className="text-4xl max-sm:text-3xl font-bold text-gray-900 leading-tight mb-4">
             Diversifying Partnerships <br />
@@ -37,28 +37,27 @@ const Step = () => {
               1
             </div>
             <div className="relative flex flex-col gap-6 w-[270px] top-[-570px] left-[170px]">
-              <h3 className="text-blue-600 font-bold text-xl">Create a Profile</h3>
+              <h3 className="text-blue-600 font-bold text-xl">Report an Issue</h3>
               <p className="text-gray-500 font-semibold text-lg">
-                Create your profile and start your entrepreneurial journey now!
+                Snap a photo or send a voice/text via app or WhatsApp. Location and category are auto-detected for fast, accurate reporting.
               </p>
             </div>
             <div className="relative flex flex-col gap-6 w-[270px] top-[-1320px] left-[1200px] font-bold text-[200px] text-[#1E5EFF] opacity-10">
               3
             </div>
             <div className="relative flex flex-col gap-6 w-[270px] top-[-1420px] left-[1020px]">
-              <h3 className="text-blue-600 font-bold text-xl">Find Grants & Find Team</h3>
+              <h3 className="text-blue-600 font-bold text-xl">Resolve & Verify</h3>
               <p className="text-gray-500 font-semibold text-lg">
-                Discover investment opportunities and strategic partnerships to scale your business!
+                Assigned to the right department, updated in real time, and marked resolved after verification. Earn credits for verified fixes and help improve your neighborhood!
               </p>
             </div>
             <div className="relative flex flex-col gap-6 w-[270px] top-[-1480px] left-[850px] text-[200px] font-bold text-[#1E5EFF] opacity-10">
               2
             </div>
             <div className="relative flex flex-col gap-6 w-[270px] top-[-1590px] left-[670px]">
-              <h3 className="text-blue-600 font-bold text-xl">Build your connections</h3>
+              <h3 className="text-blue-600 font-bold text-xl">Track & Collaborate</h3>
               <p className="text-gray-500 font-semibold text-lg">
-                Find appropriate partners, team members, co-founders, mentors and share your
-                business idea.
+                See your report on the live map, attach to similar reports, upvote, and comment — stay informed as the community and officials interact!
               </p>
             </div>
           </div>
