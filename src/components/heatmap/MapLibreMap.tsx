@@ -149,8 +149,12 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
     initializeAdvancedServices();
 
     return () => {
-      if (realtimeSubscription) {
-        eventDrivenRealtimeService.unsubscribe(realtimeSubscription);
+      if (realtimeSubscription && eventDrivenRealtimeService && typeof eventDrivenRealtimeService.unsubscribe === 'function') {
+        try {
+          eventDrivenRealtimeService.unsubscribe(realtimeSubscription);
+        } catch (error) {
+          console.warn('Error unsubscribing from realtime service during cleanup:', error);
+        }
       }
     };
   }, [config, data.dataPoints]);
@@ -159,64 +163,103 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    const map = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
-        sources: {
-          'osm': {
-            type: 'raster',
-            tiles: [
-              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
-            ],
-            tileSize: 256,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }
-        },
-        layers: [
-          {
-            id: 'osm-layer',
-            type: 'raster',
-            source: 'osm',
-            minzoom: 0,
-            maxzoom: 19
-          }
-        ]
-      },
-      center: mapCenter,
-      zoom: getInitialZoom(),
-      interactive: true
-    });
-
-    // Add navigation controls
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
-    map.addControl(new maplibregl.FullscreenControl(), 'top-right');
-
-    mapRef.current = map;
-
-    // Notify immediately that map is available 
-    if (onMapInstanceReady) {
-      console.log('Notifying map is ready immediately');
-      onMapInstanceReady(map);
+    // Check if maplibregl is properly loaded
+    if (!maplibregl || typeof maplibregl.Map !== 'function') {
+      console.error('MapLibre GL JS not properly loaded');
+      return;
     }
 
-    // Also notify when fully loaded
-    map.on('load', () => {
-      if (onMapInstanceReady) {
-        console.log('Map fully loaded event');
-        onMapInstanceReady(map);
-      }
-    });
+    let map: maplibregl.Map | null = null;
+    let isCleaningUp = false;
 
-    // Setup advanced event handlers
-    setupEventHandlers(map);
+    try {
+      map = new maplibregl.Map({
+        container: mapContainer.current,
+        style: {
+          version: 8,
+          glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+          sources: {
+            'osm': {
+              type: 'raster',
+              tiles: [
+                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+              ],
+              tileSize: 256,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }
+          },
+          layers: [
+            {
+              id: 'osm-layer',
+              type: 'raster',
+              source: 'osm',
+              minzoom: 0,
+              maxzoom: 19
+            }
+          ]
+        },
+        center: mapCenter,
+        zoom: getInitialZoom(),
+        interactive: true
+      });
+
+      // Add navigation controls
+      if (map && !isCleaningUp) {
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+        map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+
+        mapRef.current = map;
+
+        // Notify immediately that map is available 
+        if (onMapInstanceReady && !isCleaningUp) {
+          console.log('Notifying map is ready immediately');
+          onMapInstanceReady(map);
+        }
+
+        // Also notify when fully loaded
+        map.on('load', () => {
+          if (onMapInstanceReady && !isCleaningUp && mapRef.current) {
+            console.log('Map fully loaded event');
+            onMapInstanceReady(mapRef.current);
+          }
+        });
+
+        // Setup advanced event handlers
+        setupEventHandlers(map);
+      }
+    } catch (error) {
+      console.error('Error initializing MapLibre map:', error);
+    }
 
     return () => {
-      cleanup();
-      map.remove();
+      isCleaningUp = true;
+      
+      try {
+        cleanup();
+      } catch (error) {
+        console.warn('Error during cleanup:', error);
+      }
+      
+      try {
+        if (map && map.remove && typeof map.remove === 'function') {
+          map.remove();
+        }
+        map = null;
+      } catch (error) {
+        console.warn('Error removing map instance:', error);
+        map = null;
+      }
+      
+      // Clear the ref safely
+      try {
+        if (mapRef.current) {
+          mapRef.current = null;
+        }
+      } catch (error) {
+        console.warn('Error clearing map ref:', error);
+      }
     };
   }, []);
 
@@ -347,29 +390,43 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
   // Memoized GeoJSON data with data limiting for performance
   const geoJsonData = useMemo(() => {
-    if (!data.dataPoints || data.dataPoints.length === 0) return null;
+    if (!data.dataPoints || data.dataPoints.length === 0) {
+      console.log('No data points available for map rendering');
+      return {
+        type: 'FeatureCollection' as const,
+        features: []
+      };
+    }
 
+    console.log(`Converting ${data.dataPoints.length} data points to GeoJSON`);
+    
     // Limit data points for performance - show max 200 points
     const limitedDataPoints = data.dataPoints.slice(0, 200);
 
     return {
-      type: 'FeatureCollection',
-      features: limitedDataPoints.map(point => ({
-        type: 'Feature',
-        properties: {
-          id: point._id || 'unknown',
-          value: point.value || 0,
-          issueType: point.metadata?.issueType || 'Unknown',
-          priority: point.metadata?.priority || 'Medium',
-          status: point.metadata?.status || 'Open',
-          category: point.metadata?.category || 'General'
-        },
+      type: 'FeatureCollection' as const,
+      features: limitedDataPoints.map((point, index) => ({
+        type: 'Feature' as const,
+        id: point._id || `point-${index}`,
         geometry: {
-          type: 'Point',
+          type: 'Point' as const,
           coordinates: point.location.coordinates
+        },
+        properties: {
+          id: point._id || `point-${index}`,
+          value: point.value || 0,
+          intensity: point.intensity || 'medium',
+          weight: point.weight || 1,
+          category: point.metadata?.category || 'other',
+          urgency: point.metadata?.urgency || 'medium',
+          issueType: point.metadata?.issueType || 'Issue',
+          priority: point.metadata?.priority || 'Medium',
+          description: point.metadata?.description || 'No description available',
+          timestamp: point.timestamp || point.metadata?.timestamp || Date.now(),
+          status: point.metadata?.status || 'reported'
         }
       }))
-    } as GeoJSON.FeatureCollection;
+    };
   }, [data.dataPoints]);
 
   // Separate layer management for better performance
@@ -500,9 +557,13 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
   // Update data layers when data changes - optimized
   useEffect(() => {
-    if (!mapRef.current || !geoJsonData) return;
+    if (!mapRef.current || !geoJsonData || geoJsonData.features.length === 0) {
+      console.log('Skipping layer update - no map, data, or empty features');
+      return;
+    }
 
     const map = mapRef.current;
+    console.log(`Updating map layers with ${geoJsonData.features.length} features`);
 
     // Update source data instead of recreating source
     if (map.getSource('points')) {
@@ -526,17 +587,29 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
   // Cleanup function
   const cleanup = useCallback(() => {
+    // Clear timeout safely
     if (debouncedBoundsChange.current) {
       clearTimeout(debouncedBoundsChange.current);
+      debouncedBoundsChange.current = null;
     }
     
+    // Remove popup safely
     if (popup) {
-      popup.remove();
+      try {
+        popup.remove();
+      } catch (error) {
+        console.warn('Error removing popup:', error);
+      }
       setPopup(null);
     }
     
-    if (realtimeSubscription) {
-      eventDrivenRealtimeService.unsubscribe(realtimeSubscription);
+    // Unsubscribe from realtime service safely
+    if (realtimeSubscription && eventDrivenRealtimeService && typeof eventDrivenRealtimeService.unsubscribe === 'function') {
+      try {
+        eventDrivenRealtimeService.unsubscribe(realtimeSubscription);
+      } catch (error) {
+        console.warn('Error unsubscribing from realtime service:', error);
+      }
     }
   }, [popup, realtimeSubscription]);
 

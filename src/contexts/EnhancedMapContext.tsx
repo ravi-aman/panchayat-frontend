@@ -496,9 +496,13 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   useEffect(() => {
     return () => {
       // Cleanup any map instance resources
-      if (state.mapInstance && state.mapInstance.remove) {
+      if (state.mapInstance && typeof state.mapInstance === 'object') {
         try {
-          state.mapInstance.remove();
+          if (typeof state.mapInstance.remove === 'function') {
+            state.mapInstance.remove();
+          } else if (state.mapInstance.destroy && typeof state.mapInstance.destroy === 'function') {
+            state.mapInstance.destroy();
+          }
         } catch (error) {
           console.warn('Error cleaning up map instance:', error);
         }

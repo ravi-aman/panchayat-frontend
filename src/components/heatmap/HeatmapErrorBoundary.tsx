@@ -99,7 +99,7 @@ const generateErrorId = () => {
   return `ERR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-const getErrorCategory = (error: Error): 'network' | 'render' | 'data' | 'permission' | 'unknown' => {
+const getErrorCategory = (error: Error): 'network' | 'render' | 'data' | 'permission' | 'cleanup' | 'initialization' | 'unknown' => {
   const message = error.message.toLowerCase();
   
   if (message.includes('network') || message.includes('fetch') || message.includes('cors')) {
@@ -113,6 +113,13 @@ const getErrorCategory = (error: Error): 'network' | 'render' | 'data' | 'permis
   }
   if (message.includes('permission') || message.includes('geolocation') || message.includes('access')) {
     return 'permission';
+  }
+  if (message.includes('destroy') || message.includes('cleanup') || message.includes('remove') || 
+      message.includes('cannot set properties of undefined')) {
+    return 'cleanup';
+  }
+  if (message.includes('null') || message.includes('undefined') || message.includes('not initialized')) {
+    return 'initialization';
   }
   
   return 'unknown';
@@ -147,6 +154,20 @@ const getErrorSolutions = (category: string): string[] => {
         'Check location services settings',
         'Verify user authentication',
         'Contact support for access'
+      ];
+    case 'cleanup':
+      return [
+        'This is a component cleanup error',
+        'Try refreshing the page',
+        'Close and reopen the browser tab',
+        'Clear browser cache if issue persists'
+      ];
+    case 'initialization':
+      return [
+        'Component failed to initialize properly',
+        'Wait a moment and try refreshing',
+        'Check browser console for details',
+        'Try demo mode as a workaround'
       ];
     default:
       return [
@@ -228,33 +249,45 @@ export class HeatmapErrorBoundary extends Component<HeatmapErrorBoundaryProps, E
     window.location.href = '/';
   };
 
+  // Method to get demo data for external use
+  static getDemoData = () => {
+    return DEMO_HEATMAP_DATA;
+  };
+
   render() {
     const { children, fallback, enableRetry = true, maxRetries = 3, enableDemoMode = true, className = '' } = this.props;
     const { hasError, error, errorInfo, errorId, retryCount, isDemoMode } = this.state;
 
     // If in demo mode, render children with mock context
     if (isDemoMode) {
-      return (
-        <div className={`heatmap-demo-mode ${className}`}>
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-            <motion.div
-              className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r-lg shadow-lg"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex items-center">
-                <MdInfo className="w-5 h-5 mr-2" />
-                <div>
-                  <div className="font-semibold">Demo Mode Active</div>
-                  <div className="text-sm">Using sample data - backend unavailable</div>
+      // Create a demo context that provides the mock data
+      const DemoModeWrapper = ({ children }: { children: React.ReactNode }) => {
+        // Inject demo data into the context by creating a wrapper
+        // This simulates what the backend would normally provide
+        return (
+          <div className={`heatmap-demo-mode ${className}`} data-demo-data={JSON.stringify(DEMO_HEATMAP_DATA)}>
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+              <motion.div
+                className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r-lg shadow-lg"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex items-center">
+                  <MdInfo className="w-5 h-5 mr-2" />
+                  <div>
+                    <div className="font-semibold">Demo Mode Active</div>
+                    <div className="text-sm">Using sample data - backend unavailable</div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
+            {children}
           </div>
-          {children}
-        </div>
-      );
+        );
+      };
+
+      return <DemoModeWrapper>{children}</DemoModeWrapper>;
     }
 
     if (hasError) {

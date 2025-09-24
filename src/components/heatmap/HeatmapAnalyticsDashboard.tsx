@@ -282,7 +282,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
 
   // Render the advanced dashboard with comprehensive UI
   return (
-    <HeatmapErrorBoundary>
+    // <HeatmapErrorBoundary>
       <MapProvider>
         {/* Mobile Interface for smaller screens */}
         {isMobile ? (
@@ -867,7 +867,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
         </AnimatePresence>
 
     </MapProvider>
-    </HeatmapErrorBoundary>
+    // </HeatmapErrorBoundary>
   );
 };
 

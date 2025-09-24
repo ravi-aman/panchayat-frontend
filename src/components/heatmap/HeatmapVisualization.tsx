@@ -213,8 +213,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
         refreshInterval: enablePerformanceMode ? 60000 : 30000,
         clusterThreshold: CLUSTER_THRESHOLD,
         anomalyThreshold: 0.8,
-        predictionHorizon: 24, // hours
-        spatialResolution: enablePerformanceMode ? 'low' : 'high'
+        predictionHorizon: 24 // hours
       },
       realtime: {
         enabled: enableRealtime,
@@ -229,31 +228,31 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
       visualization: {
         heatmapOpacity: 0.6,
         clusterRadius: enablePerformanceMode ? 30 : 20,
-        pointRadius: enablePerformanceMode ? 8 : 5,
         colorScheme: 'viridis',
-        intensityScale: 'logarithmic',
-        animationDuration: enablePerformanceMode ? 150 : 300,
-        enableSmoothing: !enablePerformanceMode,
-        enableInterpolation: !enablePerformanceMode
-      },
-      performance: {
-        enableVirtualization: enablePerformanceMode,
-        batchSize: DATA_BATCH_SIZE,
-        renderThrottle: RENDER_THROTTLE_MS,
-        enableLOD: enablePerformanceMode, // Level of Detail
-        maxDataPoints: enablePerformanceMode ? 5000 : 10000,
-        enableCaching: true,
-        enableCompression: enablePerformanceMode
+        opacity: 0.8,
+        radius: enablePerformanceMode ? 8 : 5,
+        blur: 15,
+        maxZoom: 18,
+        minZoom: 5,
+        showLabels: true,
+        showTooltips: enableTooltips,
+        animationDuration: enablePerformanceMode ? 150 : 300
       }
     },
     enableRealtime,
     enablePerformanceTracking: enableAdvancedFeatures,
-    filters: advancedFilters,
     onUpdate: (data) => {
       setLastUpdateTime(new Date());
       setPerformanceMetrics({
         renderTime: performance.now(),
-        dataPoints: data?.dataPoints?.length || 0,
+        dataProcessingTime: 0,
+        networkLatency: 0,
+        memoryUsage: 0,
+        frameRate: 60,
+        cacheHitRate: 0,
+        updateFrequency: 0,
+        errorRate: 0,
+        dataPointCount: data?.dataPoints?.length || 0,
         clusters: data?.clusters?.length || 0,
         anomalies: data?.anomalies?.length || 0
       });
@@ -286,7 +285,6 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     enableMetrics: enableAdvancedFeatures,
     reconnectAttempts: 5,
     reconnectDelay: 2000,
-    heartbeatInterval: 30000,
     onUpdate: (updateEvent) => {
       console.log('Real-time update received:', updateEvent);
       if (renderTimeoutRef.current) {
@@ -301,9 +299,6 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     onNotification: (notification) => {
       console.log('Real-time notification:', notification);
       // Could trigger toast notifications here
-    },
-    onConnectionChange: (connected) => {
-      console.log('WebSocket connection changed:', connected);
     }
   });
 
@@ -338,7 +333,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     // Apply advanced filters
     if (advancedFilters.timeRange.start || advancedFilters.timeRange.end) {
       dataPoints = dataPoints.filter(point => {
-        const pointTime = new Date(point.timestamp);
+        const pointTime = point.timestamp ? new Date(point.timestamp) : new Date(point.metadata?.timestamp || Date.now());
         return (!advancedFilters.timeRange.start || pointTime >= advancedFilters.timeRange.start) &&
                (!advancedFilters.timeRange.end || pointTime <= advancedFilters.timeRange.end);
       });
@@ -482,13 +477,14 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
   const handleExport = useCallback(async (format: 'json' | 'csv' | 'geojson' | 'kml') => {
     try {
       const startTime = performance.now();
+      console.log(`Exporting data in ${format} format...`);
       await exportData();
       const exportTime = performance.now() - startTime;
       console.log(`Data export took ${exportTime.toFixed(2)}ms`);
     } catch (error) {
       console.error('Export failed:', error);
     }
-  }, [exportData, enableAnalytics, enableAdvancedFeatures, advancedFilters]);
+  }, [exportData]);
 
   const handleFilterChange = useCallback((newFilters: Partial<typeof advancedFilters>) => {
     setAdvancedFilters(prev => ({ ...prev, ...newFilters }));
@@ -574,7 +570,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
       {/* Performance metrics */}
       {enableAdvancedFeatures && (
         <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-          {performanceMetrics.dataPoints} points
+          {performanceMetrics.dataPointCount || 0} points
         </div>
       )}
 
@@ -678,7 +674,6 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
               onClusterClick={handleClusterClick}
               onAnomalyClick={handleAnomalyClick}
               isLoading={isLoading}
-              config={state.config}
               onMapInstanceReady={(map) => {
                 setMapInstance(map);
                 setMapReady(true);
@@ -719,7 +714,6 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
           {/* Advanced Controls */}
           {enableControls && mapReady && (
             <HeatmapControls
-              config={state.config}
               visualization={state.visualization}
               selectedLayer={selectedLayer}
               layerVisibility={layerVisibility}
@@ -747,15 +741,12 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
               <HeatmapSidebar
                 isOpen={sidebarOpen}
                 data={state.data}
-                config={state.config}
                 selectedPoint={state.selectedPoint}
                 selectedCluster={state.selectedCluster}
                 selectedAnomaly={state.selectedAnomaly}
                 performanceMetrics={performanceMetrics}
-                filters={advancedFilters}
                 enableAdvancedFeatures={enableAdvancedFeatures}
-                onConfigChange={handleConfigChange}
-                onFilterChange={handleFilterChange}
+                onAction={(action, pointId) => console.log('Sidebar action:', action, pointId)}
                 onClose={() => setSidebarOpen(false)}
                 className="absolute left-0 top-0 h-full w-80 bg-white shadow-lg z-40"
               />
@@ -805,7 +796,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
                 </div>
                 <div className="flex justify-between">
                   <span>Points:</span>
-                  <span>{performanceMetrics.dataPoints.toLocaleString()}</span>
+                  <span>{performanceMetrics.dataPointCount?.toLocaleString() || '0'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Clusters:</span>

@@ -246,8 +246,12 @@ export const useHeatmapWebSocket = (options: UseWebSocketOptions = {}): WebSocke
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (wsService.current) {
-        wsService.current.disconnect();
+      try {
+        if (wsService.current && typeof wsService.current.disconnect === 'function') {
+          wsService.current.disconnect();
+        }
+      } catch (error) {
+        console.warn('Error during WebSocket cleanup:', error);
       }
     };
   }, []);
