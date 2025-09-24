@@ -107,7 +107,7 @@ export const HeatmapLegend: React.FC<HeatmapLegendProps> = ({
 }) => {
   // ===== STATE =====
   
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState<{ id: string; x: number; y: number } | null>(null);

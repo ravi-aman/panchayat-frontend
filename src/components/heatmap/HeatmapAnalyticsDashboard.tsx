@@ -269,6 +269,11 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
     setSidebarOpen(true);
   }, []);
 
+  // Handle layer toggle
+  const handleToggleLayer = useCallback((layerId: string) => {
+    setLayerVisibility(prev => ({ ...prev, [layerId]: !prev[layerId as keyof typeof prev] }));
+  }, []);
+
   // Calculate analytics for mobile interface
   const analytics = useMemo(() => ({
     totalIssues: heatmapState?.data?.dataPoints?.length || 0,
@@ -289,6 +294,11 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             bounds={bounds}
             data={heatmapState?.data || {}}
             analytics={analytics}
+            selectedPoint={selectedPoint}
+            selectedCluster={selectedCluster}
+            selectedAnomaly={null}
+            layerVisibility={layerVisibility}
+            onToggleLayer={handleToggleLayer}
             isLoading={isLoading}
             onRefresh={refetch}
             onBoundsChange={handleBoundsChange}
@@ -313,7 +323,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                 onPointClick={handlePointClick}
                 onClusterClick={handleClusterClick}
                 className="w-full h-full"
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '90%' }}
               />
             </div>
 
@@ -416,7 +426,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             </motion.div>
 
             {/* ===== HEATMAP LEGEND ===== */}
-            <HeatmapLegend
+            {/* <HeatmapLegend
               config={{
                 mapStyle: 'streets' as const,
                 center: [77.5946, 12.9716] as [number, number],
@@ -457,7 +467,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                 setLayerVisibility(prev => ({ ...prev, [layer]: visible }));
               }}
               className="absolute bottom-4 left-4 z-40"
-            />
+            /> */}
 
             {/* ===== ADVANCED SIDEBAR ===== */}
             <HeatmapSidebar
@@ -551,7 +561,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
 
         {/* ===== ADVANCED STATS DASHBOARD ===== */}
         <motion.div 
-          className="absolute top-4 right-4 z-50"
+          className="absolute top-24 right-95 z-5"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}

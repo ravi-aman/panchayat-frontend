@@ -717,23 +717,23 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
   return (
     <motion.div
       ref={controlsRef}
-      className={`heatmap-controls bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl ${className}`}
+      className={`heatmap-controls bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${className}`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
       style={{
         position: 'absolute',
-        top: '1rem',
-        right: '1rem',
+        top: '1xl',
+        right: '3rem',
         width: isCompact ? '280px' : '320px',
-        maxHeight: '90vh',
+        height: '83vh',
         zIndex: 40
       }}
     >
-      <div className="p-4 overflow-y-auto max-h-full">
+      <div className="p-4  max-h-full">
         
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 ">
           <div className="flex items-center space-x-2">
             <MdTune className="w-5 h-5 text-blue-600" />
             <h3 className="font-bold text-gray-900">Map Controls</h3>

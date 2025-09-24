@@ -27,10 +27,9 @@ import {
   IoLayersSharp
 } from 'react-icons/io5';
 
-import { EnhancedMapLibreMap } from './EnhancedMapLibreMap';
+import MapLibreMap from './MapLibreMap';
 import { HeatmapControls } from './HeatmapControls';
 import { HeatmapLegend } from './HeatmapLegend';
-import { useMap, useMapSelection, useMapLayers } from '../../contexts/EnhancedMapContext';
 import { RegionBounds, HeatmapDataPoint, HeatmapCluster, HeatmapAnomaly } from '../../types/heatmap';
 
 // Category icons for mobile display
@@ -133,6 +132,16 @@ interface MobileHeatmapInterfaceProps {
     trendDirection: 'up' | 'down' | 'stable';
     riskLevel: 'low' | 'medium' | 'high' | 'critical';
   };
+  selectedPoint?: HeatmapDataPoint | null;
+  selectedCluster?: HeatmapCluster | null;
+  selectedAnomaly?: HeatmapAnomaly | null;
+  layerVisibility?: {
+    heatmap: boolean;
+    clusters: boolean;
+    points: boolean;
+    boundaries: boolean;
+  };
+  onToggleLayer?: (layerId: string) => void;
   isLoading?: boolean;
   onRefresh?: () => void;
   onBoundsChange?: (bounds: RegionBounds) => void;
@@ -145,6 +154,16 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
   bounds,
   data,
   analytics,
+  selectedPoint,
+  selectedCluster,
+  selectedAnomaly,
+  layerVisibility = {
+    heatmap: true,
+    clusters: true,
+    points: true,
+    boundaries: true
+  },
+  onToggleLayer,
   isLoading = false,
   onRefresh,
   onBoundsChange,
@@ -157,10 +176,6 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
   const [bottomSheetHeight, setBottomSheetHeight] = useState(120); // Initial collapsed height
   const [activeTab, setActiveTab] = useState<'stats' | 'layers' | 'details'>('stats');
   const [searchFocused, setSearchFocused] = useState(false);
-  
-  // Enhanced context integration
-  const { selectedFeatures } = useMapSelection();
-  const { layerVisibility, toggleLayer } = useMapLayers();
   
   // Touch handling refs
   const bottomSheetRef = useRef<HTMLDivElement>(null);
@@ -231,15 +246,14 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
   }, [onRefresh]);
 
   const handleShareLocation = useCallback(() => {
-    if (navigator.share && selectedFeatures.point) {
-      const point = selectedFeatures.point;
+    if (navigator.share && selectedPoint) {
       navigator.share({
         title: 'Civic Issue Location',
-        text: `Issue: ${point.metadata?.category || 'Unknown'} at ${point.location.coordinates[1].toFixed(4)}, ${point.location.coordinates[0].toFixed(4)}`,
+        text: `Issue: ${selectedPoint.metadata?.category || 'Unknown'} at ${selectedPoint.location.coordinates[1].toFixed(4)}, ${selectedPoint.location.coordinates[0].toFixed(4)}`,
         url: window.location.href
       });
     }
-  }, [selectedFeatures.point]);
+  }, [selectedPoint]);
 
   // Render quick stats bar
   const renderQuickStats = () => (
@@ -394,7 +408,7 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
                       {layerId.replace(/([A-Z])/g, ' $1').toLowerCase()}
                     </span>
                     <motion.button
-                      onClick={() => toggleLayer(layerId)}
+                      onClick={() => onToggleLayer?.(layerId)}
                       className={`relative w-12 h-6 rounded-full transition-colors ${
                         isVisible ? 'bg-blue-600' : 'bg-gray-300'
                       }`}
@@ -420,20 +434,20 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {selectedFeatures.point || selectedFeatures.cluster || selectedFeatures.anomaly ? (
+              {selectedPoint || selectedCluster || selectedAnomaly ? (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    {selectedFeatures.point ? 'Issue Details' : 
-                     selectedFeatures.cluster ? 'Cluster Details' : 
+                    {selectedPoint ? 'Issue Details' : 
+                     selectedCluster ? 'Cluster Details' : 
                      'Anomaly Details'}
                   </h3>
                   
-                  {selectedFeatures.point && (
+                  {selectedPoint && (
                     <div className="space-y-3">
                       <div className="bg-gray-50 p-3 rounded-lg">
                         <div className="text-sm text-gray-600">Category</div>
                         <div className="text-lg font-semibold text-gray-900 capitalize">
-                          {selectedFeatures.point.metadata?.category || 'Unknown'}
+                          {selectedPoint.metadata?.category || 'Unknown'}
                         </div>
                       </div>
                       
@@ -441,13 +455,13 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <div className="text-xs text-blue-600 font-medium">Intensity</div>
                           <div className="text-lg font-bold text-blue-900">
-                            {(selectedFeatures.point.value * 100).toFixed(1)}%
+                            {(selectedPoint.value * 100).toFixed(1)}%
                           </div>
                         </div>
                         <div className="bg-red-50 p-3 rounded-lg">
                           <div className="text-xs text-red-600 font-medium">Risk Score</div>
                           <div className="text-lg font-bold text-red-900">
-                            {(selectedFeatures.point.riskScore * 100).toFixed(1)}%
+                            {(selectedPoint.riskScore * 100).toFixed(1)}%
                           </div>
                         </div>
                       </div>
@@ -470,19 +484,19 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
                     </div>
                   )}
 
-                  {selectedFeatures.cluster && (
+                  {selectedCluster && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-purple-50 p-3 rounded-lg">
                           <div className="text-xs text-purple-600 font-medium">Issues</div>
                           <div className="text-lg font-bold text-purple-900">
-                            {selectedFeatures.cluster.points?.length || 0}
+                            {selectedCluster.points?.length || 0}
                           </div>
                         </div>
                         <div className="bg-orange-50 p-3 rounded-lg">
                           <div className="text-xs text-orange-600 font-medium">Density</div>
                           <div className="text-lg font-bold text-orange-900">
-                            {(selectedFeatures.cluster.density * 100).toFixed(1)}%
+                            {(selectedCluster.density * 100).toFixed(1)}%
                           </div>
                         </div>
                       </div>
@@ -506,16 +520,15 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
     <div className={`mobile-heatmap-interface relative w-full h-full overflow-hidden bg-gray-50 ${className}`}>
       {/* Main Map Container */}
       <div className="absolute inset-0">
-        <EnhancedMapLibreMap
-          bounds={bounds}
+        <MapLibreMap
           data={data}
+          bounds={bounds}
           layerVisibility={layerVisibility}
-          onPointClick={onPointClick}
-          onClusterClick={onClusterClick}
-          onBoundsChange={onBoundsChange}
-          className="w-full h-full"
-          enableControls={false} // We handle controls in mobile UI
-          enableTooltips={true}
+          onPointClick={(point, _event) => onPointClick?.(point)}
+          onClusterClick={(cluster, _event) => onClusterClick?.(cluster)}
+          onAnomalyClick={(_anomaly, _event) => {}}
+          onBoundsChange={onBoundsChange || (() => {})}
+          isLoading={isLoading || false}
         />
       </div>
 
