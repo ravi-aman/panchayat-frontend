@@ -191,6 +191,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
   
   const [isCompact, setIsCompact] = useState(false);
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const controlsRef = useRef<HTMLDivElement>(null);
 
@@ -715,218 +716,291 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
   // ===== MAIN RENDER =====
 
   return (
-    <motion.div
-      ref={controlsRef}
-      className={`heatmap-controls bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${className}`}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      style={{
-        position: 'absolute',
-        top: '1xl',
-        right: '3rem',
-        width: isCompact ? '280px' : '320px',
-        height: '83vh',
-        zIndex: 40
-      }}
-    >
-      <div className="p-4  max-h-full">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 ">
-          <div className="flex items-center space-x-2">
-            <MdTune className="w-5 h-5 text-blue-600" />
-            <h3 className="font-bold text-gray-900">Map Controls</h3>
-          </div>
-          <motion.button
-            onClick={() => setIsCompact(!isCompact)}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <MdSettings className="w-4 h-4 text-gray-600" />
-          </motion.button>
-        </div>
-
-        {/* Connection Status */}
-        <div className="mb-4">
-          <ConnectionStatus />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="mb-6">
-          <ActionButtons />
-        </div>
-
-        {/* Control Sections */}
-        <div className="space-y-4">
-          
-          {/* Layer Controls */}
-          <motion.div
-            className="border border-gray-200 rounded-lg overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            <motion.button
-              onClick={() => handleSectionToggle('layers')}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-              whileHover={{ backgroundColor: '#f3f4f6' }}
-            >
+    <AnimatePresence mode="wait">
+      {isExpanded ? (
+        <motion.div
+          ref={controlsRef}
+          className={`heatmap-controls bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${className}`}
+          initial={{
+            opacity: 0,
+            scale: 0.1,
+            x: 0,
+            y: 0,
+            transformOrigin: "top right"
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            x: 0,
+            y: 0,
+            transformOrigin: "top right"
+          }}
+          exit={{
+            opacity: 0,
+            scale: 0.1,
+            x: 0,
+            y: 0,
+            transformOrigin: "top right"
+          }}
+          transition={{
+            duration: 0.4,
+            ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for smooth, bouncy feel
+            scale: {
+              type: "spring",
+              damping: 20,
+              stiffness: 300
+            }
+          }}
+          style={{
+            position: 'absolute',
+            top: '1xl',
+            right: '3rem',
+            width: isCompact ? '280px' : '320px',
+            height: '83vh',
+            zIndex: 40
+          }}
+        >
+          <div className="p-4 max-h-full">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <MdLayers className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-900">Map Layers</span>
+                <MdTune className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-gray-900">Map Controls</h3>
               </div>
-              {expandedSections.layers ? <MdExpandLess /> : <MdExpandMore />}
-            </motion.button>
-            <AnimatePresence>
-              {expandedSections.layers && (
-                <motion.div
-                  className="p-3 bg-white border-t border-gray-200"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <LayerControls />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          {/* Visualization Controls */}
-          <motion.div
-            className="border border-gray-200 rounded-lg overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <motion.button
-              onClick={() => handleSectionToggle('visualization')}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center space-x-2">
-                <MdPalette className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-900">Visualization</span>
-              </div>
-              {expandedSections.visualization ? <MdExpandLess /> : <MdExpandMore />}
-            </motion.button>
-            <AnimatePresence>
-              {expandedSections.visualization && (
-                <motion.div
-                  className="p-3 bg-white border-t border-gray-200"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <VisualizationControls />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          {/* Performance Metrics */}
-          {enableAdvancedFeatures && (
-            <motion.div
-              className="border border-gray-200 rounded-lg overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
               <motion.button
-                onClick={() => handleSectionToggle('performance')}
-                className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                onClick={() => setIsExpanded(false)}
+                className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.2 }}
               >
-                <div className="flex items-center space-x-2">
-                  <MdMemory className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">Performance</span>
-                </div>
-                {expandedSections.performance ? <MdExpandLess /> : <MdExpandMore />}
+                <MdSettings className="w-4 h-4 text-gray-600" />
               </motion.button>
-              <AnimatePresence>
-                {expandedSections.performance && (
-                  <motion.div
-                    className="p-3 bg-white border-t border-gray-200"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <PerformanceMetrics />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            </div>
+
+            {/* Connection Status */}
+            <motion.div
+              className="mb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              <ConnectionStatus />
             </motion.div>
-          )}
 
-          {/* Filter Controls */}
-          <motion.div
-            className="border border-gray-200 rounded-lg overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <motion.button
-              onClick={() => handleSectionToggle('filters')}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+            {/* Action Buttons */}
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
             >
-              <div className="flex items-center space-x-2">
-                <MdFilterList className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-900">Filters</span>
-              </div>
-              {expandedSections.filters ? <MdExpandLess /> : <MdExpandMore />}
-            </motion.button>
-            <AnimatePresence>
-              {expandedSections.filters && (
-                <motion.div
-                  className="p-3 bg-white border-t border-gray-200"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+              <ActionButtons />
+            </motion.div>
+
+            {/* Control Sections */}
+            <div className="space-y-4">
+              
+              {/* Layer Controls */}
+              <motion.div
+                className="border border-gray-200 rounded-lg overflow-hidden"
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+              >
+                <motion.button
+                  onClick={() => handleSectionToggle('layers')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  whileHover={{ backgroundColor: '#f3f4f6' }}
                 >
-                  <FilterControls />
+                  <div className="flex items-center space-x-2">
+                    <MdLayers className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-900">Map Layers</span>
+                  </div>
+                  {expandedSections.layers ? <MdExpandLess /> : <MdExpandMore />}
+                </motion.button>
+                <AnimatePresence>
+                  {expandedSections.layers && (
+                    <motion.div
+                      className="p-3 bg-white border-t border-gray-200"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
+                      <LayerControls />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Visualization Controls */}
+              <motion.div
+                className="border border-gray-200 rounded-lg overflow-hidden"
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
+              >
+                <motion.button
+                  onClick={() => handleSectionToggle('visualization')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center space-x-2">
+                    <MdPalette className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-900">Visualization</span>
+                  </div>
+                  {expandedSections.visualization ? <MdExpandLess /> : <MdExpandMore />}
+                </motion.button>
+                <AnimatePresence>
+                  {expandedSections.visualization && (
+                    <motion.div
+                      className="p-3 bg-white border-t border-gray-200"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
+                      <VisualizationControls />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Performance Metrics */}
+              {enableAdvancedFeatures && (
+                <motion.div
+                  className="border border-gray-200 rounded-lg overflow-hidden"
+                  initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
+                >
+                  <motion.button
+                    onClick={() => handleSectionToggle('performance')}
+                    className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <MdMemory className="w-4 h-4 text-gray-600" />
+                      <span className="font-medium text-gray-900">Performance</span>
+                    </div>
+                    {expandedSections.performance ? <MdExpandLess /> : <MdExpandMore />}
+                  </motion.button>
+                  <AnimatePresence>
+                    {expandedSections.performance && (
+                      <motion.div
+                        className="p-3 bg-white border-t border-gray-200"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      >
+                        <PerformanceMetrics />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
-            </AnimatePresence>
-          </motion.div>
 
-          {/* Export Controls */}
-          <motion.div
-            className="border border-gray-200 rounded-lg overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <motion.button
-              onClick={() => handleSectionToggle('export')}
-              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center space-x-2">
-                <MdDownload className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-900">Export</span>
-              </div>
-              {expandedSections.export ? <MdExpandLess /> : <MdExpandMore />}
-            </motion.button>
-            <AnimatePresence>
-              {expandedSections.export && (
-                <motion.div
-                  className="p-3 bg-white border-t border-gray-200"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+              {/* Filter Controls */}
+              <motion.div
+                className="border border-gray-200 rounded-lg overflow-hidden"
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.7, duration: 0.3 }}
+              >
+                <motion.button
+                  onClick={() => handleSectionToggle('filters')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <ExportControls />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                  <div className="flex items-center space-x-2">
+                    <MdFilterList className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-900">Filters</span>
+                  </div>
+                  {expandedSections.filters ? <MdExpandLess /> : <MdExpandMore />}
+                </motion.button>
+                <AnimatePresence>
+                  {expandedSections.filters && (
+                    <motion.div
+                      className="p-3 bg-white border-t border-gray-200"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
+                      <FilterControls />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
-        </div>
-      </div>
-    </motion.div>
+              {/* Export Controls */}
+              <motion.div
+                className="border border-gray-200 rounded-lg overflow-hidden"
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.8, duration: 0.3 }}
+              >
+                <motion.button
+                  onClick={() => handleSectionToggle('export')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center space-x-2">
+                    <MdDownload className="w-4 h-4 text-gray-600" />
+                    <span className="font-medium text-gray-900">Export</span>
+                  </div>
+                  {expandedSections.export ? <MdExpandLess /> : <MdExpandMore />}
+                </motion.button>
+                <AnimatePresence>
+                  {expandedSections.export && (
+                    <motion.div
+                      className="p-3 bg-white border-t border-gray-200"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
+                      <ExportControls />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.button
+          onClick={() => setIsExpanded(true)}
+          className="bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl p-3 hover:bg-white/100 transition-all duration-200"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          whileHover={{
+            scale: 1.1,
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+          }}
+          whileTap={{ scale: 0.95 }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 17
+          }}
+          style={{
+            position: 'absolute',
+            top: '1xl',
+            right: '3rem',
+            zIndex: 40
+          }}
+        >
+          <motion.div
+            whileHover={{ rotate: 45 }}
+            transition={{ duration: 0.2 }}
+          >
+            <MdSettings className="w-6 h-6 text-gray-600" />
+          </motion.div>
+        </motion.button>
+      )}
+    </AnimatePresence>
   );
 };
 
