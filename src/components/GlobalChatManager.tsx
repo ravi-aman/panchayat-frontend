@@ -22,6 +22,11 @@ export function GlobalChatManager() {
 
     return () => {
       console.log('🧹 GlobalChatManager cleanup');
+      try {
+        globalSocketManager.cleanup();
+      } catch (error) {
+        console.warn('Error during GlobalChatManager cleanup:', error);
+      }
     };
   }, [activeProfile?._id, activeProfile?.type, setTotalUnreadCount]);
 

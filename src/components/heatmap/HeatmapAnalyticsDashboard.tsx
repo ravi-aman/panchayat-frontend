@@ -1,13 +1,12 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapProvider } from '../../contexts/EnhancedMapContext';
+import { MapProvider } from '../../contexts/MapContext';
 import { RegionBounds, HeatmapDataPoint, HeatmapCluster } from '../../types/heatmap';
 import { HeatmapVisualization } from './HeatmapVisualization';
 import { HeatmapControls } from './HeatmapControls';
 import { HeatmapSidebar } from './HeatmapSidebar';
 import { HeatmapLegend } from './HeatmapLegend';
 import { HeatmapTooltip } from './HeatmapTooltip';
-import { HeatmapErrorBoundary } from './HeatmapErrorBoundary';
 import { MobileHeatmapInterface } from './MobileHeatmapInterface';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
 import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
@@ -321,6 +320,12 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             {/* ===== ADVANCED HEATMAP CONTROLS ===== */}
             <HeatmapControls
               visualization={{
+                mapStyle: 'streets' as const,
+                center: [77.5946, 12.9716] as [number, number],
+                zoom: 10,
+                pitch: 0,
+                bearing: 0,
+                interactive: true,
                 colorScheme: 'viridis',
                 opacity: 0.7,
                 radius: 20,
@@ -328,9 +333,13 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                 maxZoom: 18,
                 minZoom: 1,
                 clusterRadius: 50,
-                showLabels: true,
-                showTooltips: true,
                 animationDuration: 300,
+                controls: {
+                  navigation: true,
+                  fullscreen: true,
+                  scale: true,
+                  geolocate: true
+                },
                 layers: {
                   heatmap: { visible: layerVisibility.heatmap, opacity: 0.7, radius: 20, blur: 15, weight: 'intensity', colorStops: [[0, 'rgba(0,255,0,0)'], [0.5, 'rgba(255,255,0,0.5)'], [1, 'rgba(255,0,0,1)']] },
                   clusters: { visible: layerVisibility.clusters, opacity: 0.8, radius: 30, strokeWidth: 2, strokeColor: '#333' },
@@ -409,6 +418,12 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             {/* ===== HEATMAP LEGEND ===== */}
             <HeatmapLegend
               config={{
+                mapStyle: 'streets' as const,
+                center: [77.5946, 12.9716] as [number, number],
+                zoom: 10,
+                pitch: 0,
+                bearing: 0,
+                interactive: true,
                 colorScheme: 'viridis',
                 opacity: 0.7,
                 radius: 20,
@@ -416,9 +431,13 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                 maxZoom: 18,
                 minZoom: 1,
                 clusterRadius: 50,
-                showLabels: true,
-                showTooltips: true,
                 animationDuration: 300,
+                controls: {
+                  navigation: true,
+                  fullscreen: true,
+                  scale: true,
+                  geolocate: true
+                },
                 layers: {
                   heatmap: { visible: layerVisibility.heatmap, opacity: 0.7, radius: 20, blur: 15, weight: 'intensity', colorStops: [[0, 'rgba(0,255,0,0)'], [0.5, 'rgba(255,255,0,0.5)'], [1, 'rgba(255,0,0,1)']] },
                   clusters: { visible: layerVisibility.clusters, opacity: 0.8, radius: 30, strokeWidth: 2, strokeColor: '#333' },

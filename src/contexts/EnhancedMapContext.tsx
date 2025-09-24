@@ -2,7 +2,7 @@
 // Production-level map state management with advanced features
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useMemo } from 'react';
-import { HeatmapState, HeatmapConfig, RegionBounds, HeatmapDataPoint, HeatmapCluster, HeatmapAnomaly } from '../types/heatmap';
+import { RegionBounds, HeatmapDataPoint, HeatmapCluster, HeatmapAnomaly } from '../types/heatmap';
 
 // ===== INTERFACES =====
 
@@ -496,19 +496,20 @@ export const MapProvider: React.FC<MapProviderProps> = ({
   useEffect(() => {
     return () => {
       // Cleanup any map instance resources
-      if (state.mapInstance && typeof state.mapInstance === 'object') {
+      const currentMapInstance = state.mapInstance;
+      if (currentMapInstance && typeof currentMapInstance === 'object') {
         try {
-          if (typeof state.mapInstance.remove === 'function') {
-            state.mapInstance.remove();
-          } else if (state.mapInstance.destroy && typeof state.mapInstance.destroy === 'function') {
-            state.mapInstance.destroy();
+          if (typeof currentMapInstance.remove === 'function') {
+            currentMapInstance.remove();
+          } else if (currentMapInstance.destroy && typeof currentMapInstance.destroy === 'function') {
+            currentMapInstance.destroy();
           }
         } catch (error) {
           console.warn('Error cleaning up map instance:', error);
         }
       }
     };
-  }, [state.mapInstance]);
+  }, []);  // Remove state.mapInstance from dependencies to prevent recreation
 
   return (
     <MapContext.Provider value={contextValue}>

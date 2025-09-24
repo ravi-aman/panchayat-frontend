@@ -192,8 +192,8 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
 
   // Main heatmap data hook with enhanced configuration
   const {
-    state,
-    actions,
+    state: heatmapState,
+    actions: heatmapActions,
     isLoading,
     error,
     refetch,
@@ -324,11 +324,11 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
 
   // Processed data with advanced filtering
   const processedData = useMemo(() => {
-    if (!state.data) return { dataPoints: [], clusters: [], anomalies: [] };
+    if (!heatmapState.data) return { dataPoints: [], clusters: [], anomalies: [] };
 
     const startTime = performance.now();
     
-    let { dataPoints = [], clusters = [], anomalies = [] } = state.data;
+    let { dataPoints = [], clusters = [], anomalies = [] } = heatmapState.data;
 
     // Apply advanced filters
     if (advancedFilters.timeRange.start || advancedFilters.timeRange.end) {
@@ -361,7 +361,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     console.log(`Data processing took ${processingTime.toFixed(2)}ms`);
 
     return { dataPoints, clusters, anomalies };
-  }, [state.data, advancedFilters, enablePerformanceMode]);
+  }, [heatmapState.data, advancedFilters, enablePerformanceMode]);
 
   // ===== EVENT HANDLERS =====
 
@@ -390,10 +390,10 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     const clusterThreshold = boundsArea > 1 ? CLUSTER_THRESHOLD * 2 : CLUSTER_THRESHOLD;
     
     setBounds(newBounds);
-    actions.setBounds(newBounds);
-    actions.updateConfig({ 
+    heatmapActions.setBounds(newBounds);
+    heatmapActions.updateConfig({ 
       analytics: { 
-        ...state.config.analytics, 
+        ...heatmapState.config.analytics, 
         clusterThreshold 
       } 
     });
@@ -404,10 +404,10 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     }
 
     (onBoundsChange as OnBoundsChangeCallback | undefined)?.(newBounds);
-  }, [actions, state.config.analytics, onBoundsChange]);
+  }, [heatmapActions, heatmapState.config.analytics, onBoundsChange]);
 
   const handlePointClick = useCallback((point: HeatmapDataPoint, event: React.MouseEvent) => {
-    actions.selectPoint(point);
+    heatmapActions.selectPoint(point);
     onPointClick?.(point);
 
     if (enableTooltips) {
@@ -419,10 +419,10 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
         type: 'point'
       });
     }
-  }, [actions, onPointClick, enableTooltips]);
+  }, [heatmapActions, onPointClick, enableTooltips]);
 
   const handleClusterClick = useCallback((cluster: HeatmapCluster, event: React.MouseEvent) => {
-    actions.selectCluster(cluster);
+    heatmapActions.selectCluster(cluster);
     onClusterClick?.(cluster);
 
     if (enableTooltips) {
@@ -434,10 +434,10 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
         type: 'cluster'
       });
     }
-  }, [actions, onClusterClick, enableTooltips]);
+  }, [heatmapActions, onClusterClick, enableTooltips]);
 
   const handleAnomalyClick = useCallback((anomaly: HeatmapAnomaly, event: React.MouseEvent) => {
-    actions.selectAnomaly(anomaly);
+    heatmapActions.selectAnomaly(anomaly);
     onAnomalyClick?.(anomaly);
 
     if (enableTooltips) {
@@ -449,7 +449,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
         type: 'anomaly'
       });
     }
-  }, [actions, onAnomalyClick, enableTooltips]);
+  }, [heatmapActions, onAnomalyClick, enableTooltips]);
 
   const handleLayerToggle = useCallback((layer: string, visible: boolean) => {
     setLayerVisibility(prev => ({
@@ -459,13 +459,13 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
   }, []);
 
   const handleConfigChange = useCallback((newConfig: Partial<HeatmapVisualizationConfig>) => {
-    actions.updateVisualization(newConfig);
+    heatmapActions.updateVisualization(newConfig);
     onConfigChange?.(newConfig);
-  }, [actions, onConfigChange]);
+  }, [heatmapActions, onConfigChange]);
 
   const handleHeatmapConfigChange = useCallback((newConfig: Partial<HeatmapConfig>) => {
-    actions.updateConfig(newConfig);
-  }, [actions]);
+    heatmapActions.updateConfig(newConfig);
+  }, [heatmapActions]);
 
   const handleRefresh = useCallback(() => {
     const startTime = performance.now();
@@ -612,7 +612,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
             )}
           </div>
           <button 
-            onClick={() => actions.clearError()}
+            onClick={() => heatmapActions.clearError()}
             className="hover:opacity-70 transition-opacity"
           >
             ×
@@ -714,7 +714,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
           {/* Advanced Controls */}
           {enableControls && mapReady && (
             <HeatmapControls
-              visualization={state.visualization}
+              visualization={heatmapState.visualization}
               selectedLayer={selectedLayer}
               layerVisibility={layerVisibility}
               isLoading={isLoading}
@@ -740,10 +740,10 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
             {enableSidebar && sidebarOpen && (
               <HeatmapSidebar
                 isOpen={sidebarOpen}
-                data={state.data}
-                selectedPoint={state.selectedPoint}
-                selectedCluster={state.selectedCluster}
-                selectedAnomaly={state.selectedAnomaly}
+                data={heatmapState.data}
+                selectedPoint={heatmapState.selectedPoint}
+                selectedCluster={heatmapState.selectedCluster}
+                selectedAnomaly={heatmapState.selectedAnomaly}
                 performanceMetrics={performanceMetrics}
                 enableAdvancedFeatures={enableAdvancedFeatures}
                 onAction={(action, pointId) => console.log('Sidebar action:', action, pointId)}
@@ -755,7 +755,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
 
           {/* Enhanced Legend */}
           <HeatmapLegend
-            config={state.visualization}
+            config={heatmapState.visualization}
             data={processedData}
             selectedLayer={selectedLayer}
             layerVisibility={computedLayerVisibility}
@@ -868,14 +868,14 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
           )}
 
           {/* Notification Center (Advanced Features) */}
-          {enableAdvancedFeatures && state.notifications && state.notifications.length > 0 && (
+          {enableAdvancedFeatures && heatmapState.notifications && heatmapState.notifications.length > 0 && (
             <motion.div 
               className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              {state.notifications.slice(0, 3).map((notification, index) => (
+              {heatmapState.notifications.slice(0, 3).map((notification, index) => (
                 <motion.div
                   key={notification.id}
                   className={`mb-2 p-3 rounded-lg shadow-lg border-l-4 ${
@@ -897,7 +897,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
                       <span className="text-sm font-medium">{notification.title}</span>
                     </div>
                     <button 
-                      onClick={() => actions.dismissNotification(notification.id)}
+                      onClick={() => heatmapActions.dismissNotification(notification.id)}
                       className="text-current hover:opacity-70 transition-opacity ml-2"
                     >
                       ×
