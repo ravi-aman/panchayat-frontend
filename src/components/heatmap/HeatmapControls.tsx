@@ -737,15 +737,21 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
           }}
           exit={{
             opacity: 0,
-            scale: 0.1,
-            x: 0,
-            y: 0,
+            scale: 0.05,
+            rotate: -15,
+            x: -10,
+            y: -5,
             transformOrigin: "top right"
           }}
           transition={{
-            duration: 0.4,
-            ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for smooth, bouncy feel
+            duration: 0.35,
+            ease: [0.4, 0.0, 0.2, 1], // Material Design easing for exit
             scale: {
+              type: "spring",
+              damping: 25,
+              stiffness: 400
+            },
+            rotate: {
               type: "spring",
               damping: 20,
               stiffness: 300
@@ -971,7 +977,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
       ) : (
         <motion.button
           onClick={() => setIsExpanded(true)}
-          className="bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl p-3 hover:bg-white/100 transition-all duration-200"
+          className="bg-white/95 backdrop-blur-md shadow-[2px] border border-white/30 rounded-[5px] p-1 hover:bg-white/100 transition-all duration-200"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -987,16 +993,20 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
           }}
           style={{
             position: 'absolute',
-            top: '1xl',
+            top: '10px',
             right: '3rem',
             zIndex: 40
           }}
         >
           <motion.div
             whileHover={{ rotate: 45 }}
-            transition={{ duration: 0.2 }}
+            animate={isExpanded ? { scale: [1, 1.2, 1] } : {}}
+            transition={{
+              duration: 0.2,
+              scale: isExpanded ? { duration: 0.4, delay: 0.2 } : undefined
+            }}
           >
-            <MdSettings className="w-6 h-6 text-gray-600" />
+            <MdSettings className="w-5 h-5 text-gray-600" />
           </motion.div>
         </motion.button>
       )}
