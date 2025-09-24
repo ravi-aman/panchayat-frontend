@@ -17,6 +17,9 @@ interface UseWebSocketOptions {
   autoConnect?: boolean;
   reconnectOnError?: boolean;
   enableNotifications?: boolean;
+  enableMetrics?: boolean;
+  reconnectAttempts?: number; // Added reconnectAttempts property
+  reconnectDelay?: number; // Added reconnectDelay property
   onUpdate?: (event: HeatmapUpdateEvent) => void;
   onNotification?: (notification: HeatmapNotification) => void;
   onError?: (error: Error) => void;

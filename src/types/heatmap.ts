@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // ===== WebSocket and Real-time Types =====
 
 export interface WebSocketConfig {
@@ -101,8 +103,10 @@ export interface H3IndexHierarchy {
 // ===== CORE HEATMAP DATA STRUCTURES =====
 
 export interface HeatmapDataPoint {
+  coordinates: any;
   _id: string;
   h3Index: string;
+  timestamp?: string; // Added top-level timestamp for compatibility
   location: {
     coordinates: [number, number]; // [lng, lat]
     type: 'Point';
@@ -119,6 +123,15 @@ export interface HeatmapDataPoint {
   riskScore: number;
   freshnessScore: number;
   metadata: {
+    id?: string; // Added id field for sidebar actions
+    views: number;
+    votes: number;
+    reporter: any;
+    images: boolean | string[]; // Updated to allow both boolean and image array
+    upvotes: number;
+    comments: number;
+    address: string;
+    description: any;
     issueType: string;
     priority: number;
     timestamp: Date;
@@ -168,6 +181,9 @@ export interface HeatmapDataPoint {
 }
 
 export interface HeatmapCluster {
+  pointCount: ReactNode;
+  averageIntensity: any;
+  center: any;
   _id: string;
   clusterId: string;
   centroid: {
@@ -191,6 +207,7 @@ export interface HeatmapCluster {
     accelerationTrend: number;
   };
   metadata: {
+    categories: any;
     dominantIssueType: string;
     avgSeverity: number;
     totalReports: number;
@@ -265,6 +282,10 @@ export interface HeatmapPrediction {
 }
 
 export interface HeatmapAnomaly {
+  score: any;
+  type: string;
+  detectedAt: Date | string; // Fixed to be a Date or string instead of function
+  center: any;
   _id: string;
   h3Index: string;
   location: {
@@ -392,6 +413,7 @@ export interface HeatmapConfig {
     showLabels: boolean;
     showTooltips: boolean;
     animationDuration: number;
+    heatmapOpacity?: number;
   };
   realtime: {
     enabled: boolean;
@@ -400,12 +422,19 @@ export interface HeatmapConfig {
     pushNotifications: boolean;
     anomalyAlerts: boolean;
     predictionUpdates: boolean;
+    batchUpdates?: boolean;
+    throttleUpdates?: boolean; // Added throttleUpdates property
   };
   analytics: {
     enableTrends: boolean;
     enablePredictions: boolean;
     enableAnomalyDetection: boolean;
     enableClustering: boolean;
+    enableHeatmapGeneration?: boolean;
+    enableSpatialAnalysis?: boolean;
+    clusterThreshold?: number;
+    anomalyThreshold?: number; // Added anomalyThreshold property
+    predictionHorizon?: number; // Added predictionHorizon property
     historicalDepth: number;
     refreshInterval: number;
   };
@@ -418,6 +447,19 @@ export interface HeatmapVisualizationConfig {
   pitch: number;
   bearing: number;
   interactive: boolean;
+  opacity?: number;
+  // Extended properties for advanced controls
+  colorScheme?: 'viridis' | 'plasma' | 'magma' | 'inferno' | 'turbo' | 'custom';
+  heatmapOpacity?: number;
+  radius?: number; // Added radius property
+  blur?: number; // Added blur property
+  maxZoom?: number; // Added maxZoom property
+  minZoom?: number; // Added minZoom property
+  clusterRadius?: number;
+  animationDuration?: number;
+  enableSmoothing?: boolean;
+  enableInterpolation?: boolean;
+  pointRadius?: number; // Added pointRadius property
   controls: {
     navigation: boolean;
     fullscreen: boolean;
@@ -593,6 +635,7 @@ export interface HeatmapState {
   selectedPoint: HeatmapDataPoint | null;
   selectedCluster: HeatmapCluster | null;
   selectedAnomaly: HeatmapAnomaly | null;
+  notifications?: any[]; // Added notifications property
   viewport: {
     bounds: RegionBounds;
     center: [number, number];
@@ -640,6 +683,7 @@ export interface HeatmapActions {
   exportData: (format: 'json' | 'csv' | 'geojson') => void;
   resetState: () => void;
   clearError: () => void;
+  dismissNotification: (id: string) => void; // Added notification dismiss method
 }
 
 export type HeatmapStore = HeatmapState & { actions: HeatmapActions };
@@ -655,6 +699,13 @@ export interface PerformanceMetrics {
   cacheHitRate: number;
   updateFrequency: number;
   errorRate: number;
+  // Extended properties for advanced controls
+  fpsAverage?: number;
+  dataPointCount?: number;
+  totalIssues?: number;
+  criticalIssues?: number;
+  clusters?: number;
+  anomalies?: number;
 }
 
 export interface PerformanceThresholds {
@@ -675,4 +726,43 @@ export interface HeatmapError {
   context?: Record<string, any>;
   recoverable: boolean;
   retryAfter?: number;
+}
+
+// ===== ADDITIONAL REQUIRED TYPES =====
+
+export type IssueCategory = 'traffic' | 'flooding' | 'electricity' | 'water' | 'waste' | 'pothole' | 'streetlight' | 'other';
+
+export interface HeatmapLayer {
+  id: string;
+  type: 'heatmap' | 'cluster' | 'point' | 'boundary';
+  visible: boolean;
+  opacity: number;
+  zIndex: number;
+}
+
+export interface HeatmapAnalytics {
+  trends: {
+    daily: number[];
+    weekly: number[];
+    monthly: number[];
+  };
+  predictions: HeatmapPrediction[];
+  anomalies: HeatmapAnomaly[];
+  clusters: HeatmapCluster[];
+  performance: PerformanceMetrics;
+}
+
+export interface HeatmapRealTimeConfig {
+  enabled: boolean;
+  updateInterval: number;
+  autoReconnect: boolean;
+  maxRetries: number;
+}
+
+export interface HeatmapWebSocketHook {
+  isConnected: boolean;
+  status: ConnectionStatus;
+  subscribe: (regionId: string) => void;
+  unsubscribe: (regionId: string) => void;
+  sendMessage: (message: any) => void;
 }

@@ -36,6 +36,8 @@ interface HeatmapHookReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
+  exportData: () => Promise<any>;
+  getMetrics: () => PerformanceMetrics;
 }
 
 // ===== DEFAULT CONFIGURATIONS =====
@@ -617,13 +619,36 @@ export const useHeatmapData = (options: UseHeatmapDataOptions): HeatmapHookRetur
     return () => clearInterval(interval);
   }, [state.config.realtime.enabled, state.config.realtime.autoRefresh, state.config.realtime.updateInterval, refetch]);
 
+  // Export data function
+  const exportData = useCallback(async () => {
+    try {
+      // Return the current data for export
+      return {
+        data: state.data,
+        config: state.config,
+        performance: performanceRef.current,
+        timestamp: new Date().toISOString()
+      };
+    } catch (err) {
+      console.error('Failed to export data:', err);
+      throw err;
+    }
+  }, [state.data, state.config]);
+
+  // Get metrics function
+  const getMetrics = useCallback(() => {
+    return performanceRef.current;
+  }, []);
+
   return {
     state,
     actions,
     performance: performanceRef.current,
     isLoading,
     error,
-    refetch
+    refetch,
+    exportData,
+    getMetrics
   };
 };
 

@@ -1,16 +1,27 @@
 // ===== ADVANCED HEATMAP VISUALIZATION COMPONENT =====
 // Production-level React component for interactive heatmap visualization
 
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HeatmapDataPoint,
   HeatmapCluster,
   HeatmapAnomaly,
-  RegionBounds
+  RegionBounds,
+  HeatmapVisualizationConfig,
+  HeatmapConfig,
+  PerformanceMetrics
 } from '../../types/heatmap';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
+import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
+import { useMap } from '../../contexts/MapContext';
 import MapLibreMap from './MapLibreMap';
+import HeatmapControls from './HeatmapControls';
+import HeatmapSidebar from './HeatmapSidebar';
+import HeatmapLegend from './HeatmapLegend';
+import HeatmapTooltip from './HeatmapTooltip';
+import HeatmapErrorBoundary from './HeatmapErrorBoundary';
+// import SearchAndNavigate from './SearchAndNavigate';
 import {
   MdElectricBolt,
   MdWater,
@@ -26,12 +37,17 @@ import {
   MdFullscreen,
   MdLayers,
   MdAnalytics,
-  MdSettings,
   MdVisibility,
-  MdVisibilityOff
+  MdVisibilityOff,
+  MdRefresh,
+  MdDownload,
+  MdFilterList,
+  MdTimeline,
+  MdPlace
 } from 'react-icons/md';
+import SearchAndNavigate from '../common/SearchAndNavigate';
 
-// ===== COMPONENT INTERFACES =====
+// ===== TYPE DEFINITIONS =====
 
 interface HeatmapVisualizationProps {
   initialBounds: RegionBounds;
@@ -40,6 +56,8 @@ interface HeatmapVisualizationProps {
   enableSidebar?: boolean;
   enableTooltips?: boolean;
   enableAnalytics?: boolean;
+  enablePerformanceMode?: boolean;
+  enableAdvancedFeatures?: boolean;
   className?: string;
   style?: React.CSSProperties;
   onPointClick?: (point: HeatmapDataPoint) => void;
@@ -47,6 +65,7 @@ interface HeatmapVisualizationProps {
   onAnomalyClick?: (anomaly: HeatmapAnomaly) => void;
   onBoundsChange?: (bounds: RegionBounds) => void;
   onDataUpdate?: (data: any) => void;
+  onConfigChange?: (config: Partial<HeatmapVisualizationConfig>) => void;
 }
 
 interface TooltipState {
@@ -57,403 +76,103 @@ interface TooltipState {
   type: 'point' | 'cluster' | 'anomaly' | null;
 }
 
-// Category configuration for markers
+interface LayerVisibilityState {
+  heatmap: boolean;
+  clusters: boolean;
+  points: boolean;
+  boundaries: boolean;
+  predictions: boolean;
+  anomalies: boolean;
+  realtime: boolean;
+  heatmapIntensity: boolean;
+  historicalData: boolean;
+}
+
+// ===== CONSTANTS =====
+
+// Category configuration for markers with enhanced styling
 const CATEGORY_ICONS = {
-  'electricity': { icon: MdElectricBolt, color: '#FFC107' },
-  'water': { icon: MdWater, color: '#2196F3' },
-  'traffic': { icon: MdTraffic, color: '#FF5722' },
-  'construction': { icon: MdConstruction, color: '#FF9800' },
-  'waste': { icon: MdDelete, color: '#4CAF50' },
-  'streetlight': { icon: MdLightbulb, color: '#FFEB3B' },
-  'pothole': { icon: MdWarning, color: '#E91E63' },
-  'safety': { icon: MdSecurity, color: '#9C27B0' },
-  'flooding': { icon: MdWater, color: '#00BCD4' },
-  'other': { icon: MdInfo, color: '#607D8B' }
+  'electricity': { icon: MdElectricBolt, color: '#FFC107', bgColor: '#FFF9C4', priority: 'high', label: 'Electricity Issues' },
+  'water': { icon: MdWater, color: '#2196F3', bgColor: '#E3F2FD', priority: 'high', label: 'Water Issues' },
+  'traffic': { icon: MdTraffic, color: '#FF5722', bgColor: '#FFEBE9', priority: 'medium', label: 'Traffic Issues' },
+  'construction': { icon: MdConstruction, color: '#FF9800', bgColor: '#FFF3E0', priority: 'medium', label: 'Construction' },
+  'waste': { icon: MdDelete, color: '#4CAF50', bgColor: '#E8F5E8', priority: 'low', label: 'Waste Management' },
+  'streetlight': { icon: MdLightbulb, color: '#FFEB3B', bgColor: '#FFFDE7', priority: 'low', label: 'Street Lighting' },
+  'pothole': { icon: MdWarning, color: '#E91E63', bgColor: '#FCE4EC', priority: 'high', label: 'Road Damage' },
+  'safety': { icon: MdSecurity, color: '#9C27B0', bgColor: '#F3E5F5', priority: 'high', label: 'Safety Concerns' },
+  'flooding': { icon: MdWater, color: '#00BCD4', bgColor: '#E0F2F1', priority: 'critical', label: 'Flooding' },
+  'emergency': { icon: MdWarning, color: '#F44336', bgColor: '#FFEBEE', priority: 'critical', label: 'Emergency' },
+  'other': { icon: MdInfo, color: '#607D8B', bgColor: '#ECEFF1', priority: 'low', label: 'Other Issues' }
 };
+
+// Performance optimization constants
+const RENDER_THROTTLE_MS = 16; // 60fps
+const DATA_BATCH_SIZE = 1000;
+const CLUSTER_THRESHOLD = 50;
 
 // ===== MAIN COMPONENT =====
 
-export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = ({
+export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.memo(({
   initialBounds,
   enableRealtime = true,
   enableControls = true,
   enableSidebar = false,
   enableTooltips = true,
-  enableAnalytics = false,
+  enableAnalytics = true,
+  enablePerformanceMode = false,
+  enableAdvancedFeatures = true,
   className = '',
   style = {},
   onPointClick,
   onClusterClick,
   onAnomalyClick,
   onBoundsChange,
-  onDataUpdate
+  onDataUpdate,
+  onConfigChange
 }) => {
+  // ===== HOOKS =====
+  
+  const { mapInstance, setMapInstance } = useMap();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // ===== STATE MANAGEMENT =====
+  
   const [bounds, setBounds] = useState<RegionBounds>(initialBounds);
-  const [selectedPoint, setSelectedPoint] = useState<HeatmapDataPoint | null>(null);
-  const [selectedCluster, setSelectedCluster] = useState<HeatmapCluster | null>(null);
-  const [selectedAnomaly, setSelectedAnomaly] = useState<HeatmapAnomaly | null>(null);
-  const [layerVisibility, setLayerVisibility] = useState({
+  const [sidebarOpen, setSidebarOpen] = useState(enableSidebar);
+  const [selectedLayer, setSelectedLayer] = useState<'heatmap' | 'clusters' | 'points' | 'all'>('all');
+  const [mapReady, setMapReady] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
+    renderTime: 0,
+    dataProcessingTime: 0,
+    networkLatency: 0,
+    memoryUsage: 0,
+    frameRate: 60,
+    cacheHitRate: 0,
+    updateFrequency: 0,
+    errorRate: 0,
+    fpsAverage: 60,
+    dataPointCount: 0,
+    totalIssues: 0,
+    criticalIssues: 0,
+    clusters: 0,
+    anomalies: 0
+  });
+  
+  const [layerVisibility, setLayerVisibility] = useState<LayerVisibilityState>({
     heatmap: true,
     clusters: true,
     points: true,
     boundaries: false,
-    predictions: false,
-    anomalies: true
-  });
-  const [tooltipState, setTooltipState] = useState<TooltipState>({
-    visible: false,
-    x: 0,
-    y: 0,
-    data: null,
-    type: null
-  });
-  const [zoomLevel, setZoomLevel] = useState(12);
-  const [mapReady, setMapReady] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // ===== DATA HOOKS =====
-  const { state: heatmapState, isLoading, error } = useHeatmapData({
-    bounds,
-    enableRealtime,
-    config: {
-      analytics: {
-        enableClustering: true,
-        enableAnomalyDetection: true,
-        enableTrends: true,
-        enablePredictions: enableAnalytics,
-        historicalDepth: 30,
-        refreshInterval: 300000
-      },
-      realtime: {
-        enabled: enableRealtime,
-        updateInterval: 5000,
-        autoRefresh: true,
-        pushNotifications: true,
-        anomalyAlerts: true,
-        predictionUpdates: enableAnalytics
-      }
-    },
-    onUpdate: onDataUpdate
+    predictions: enableAnalytics,
+    anomalies: true,
+    realtime: enableRealtime,
+    heatmapIntensity: true,
+    historicalData: false
   });
 
-  // ===== HANDLERS =====
-
-  const handleBoundsChange = useCallback((newBounds: RegionBounds) => {
-    setBounds(newBounds);
-    onBoundsChange?.(newBounds);
-  }, [onBoundsChange]);
-
-  const handlePointClick = useCallback((point: HeatmapDataPoint, event: React.MouseEvent) => {
-    setSelectedPoint(point);
-    setSelectedCluster(null);
-    setSelectedAnomaly(null);
-    onPointClick?.(point);
-    
-    if (enableTooltips) {
-      setTooltipState({
-        visible: true,
-        x: event.clientX,
-        y: event.clientY,
-        data: point,
-        type: 'point'
-      });
-    }
-  }, [onPointClick, enableTooltips]);
-
-  const handleClusterClick = useCallback((cluster: HeatmapCluster, event: React.MouseEvent) => {
-    setSelectedCluster(cluster);
-    setSelectedPoint(null);
-    setSelectedAnomaly(null);
-    onClusterClick?.(cluster);
-    
-    if (enableTooltips) {
-      setTooltipState({
-        visible: true,
-        x: event.clientX,
-        y: event.clientY,
-        data: cluster,
-        type: 'cluster'
-      });
-    }
-  }, [onClusterClick, enableTooltips]);
-
-  const handleAnomalyClick = useCallback((anomaly: HeatmapAnomaly, event: React.MouseEvent) => {
-    setSelectedAnomaly(anomaly);
-    setSelectedPoint(null);
-    setSelectedCluster(null);
-    onAnomalyClick?.(anomaly);
-    
-    if (enableTooltips) {
-      setTooltipState({
-        visible: true,
-        x: event.clientX,
-        y: event.clientY,
-        data: anomaly,
-        type: 'anomaly'
-      });
-    }
-  }, [onAnomalyClick, enableTooltips]);
-
-  const hideTooltip = useCallback(() => {
-    setTooltipState(prev => ({ ...prev, visible: false }));
-  }, []);
-
-  // ===== COMPUTED VALUES =====
-  
-  const mapData = useMemo(() => ({
-    dataPoints: heatmapState?.data?.dataPoints || [],
-    clusters: heatmapState?.data?.clusters || [],
-    anomalies: heatmapState?.data?.anomalies || []
-  }), [heatmapState]);
-
-  // ===== TOOLTIP COMPONENT =====
-  
-  const AdvancedTooltip = () => {
-    if (!tooltipState.visible || !tooltipState.data) return null;
-
-    return (
-      <AnimatePresence>
-        <motion.div
-          className="fixed z-50 pointer-events-none"
-          style={{
-            left: tooltipState.x + 10,
-            top: tooltipState.y - 10
-          }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.15 }}
-        >
-          <div className="bg-white/95 backdrop-blur-md rounded-lg shadow-xl border border-white/30 p-4 max-w-xs">
-            {tooltipState.type === 'point' && tooltipState.data && (
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  {(() => {
-                    const point = tooltipState.data as HeatmapDataPoint;
-                    const categoryKey = point.metadata?.category || 'other';
-                    const config = CATEGORY_ICONS[categoryKey] || CATEGORY_ICONS.other;
-                    const IconComponent = config.icon;
-                    return <IconComponent className="w-4 h-4" style={{ color: config.color }} />;
-                  })()}
-                  <span className="font-semibold text-gray-900 capitalize">
-                    {(tooltipState.data as HeatmapDataPoint).metadata?.category || 'Issue'}
-                  </span>
-                </div>
-                <div className="space-y-1 text-sm text-gray-700">
-                  <div>Intensity: {((tooltipState.data as HeatmapDataPoint).value * 100).toFixed(1)}%</div>
-                  <div>Priority: {(tooltipState.data as HeatmapDataPoint).metadata?.urgency || 'N/A'}</div>
-                  <div>Reports: {(tooltipState.data as HeatmapDataPoint).metadata?.reportCount || 0}</div>
-                </div>
-              </div>
-            )}
-            
-            {tooltipState.type === 'cluster' && tooltipState.data && (
-              <div>
-                <div className="font-semibold text-gray-900 mb-2">Issue Cluster</div>
-                <div className="space-y-1 text-sm text-gray-700">
-                  <div>Issues: {(tooltipState.data as HeatmapCluster).points?.length || 0}</div>
-                  <div>Density: {((tooltipState.data as HeatmapCluster).density * 100).toFixed(1)}%</div>
-                  <div>Risk Level: {(tooltipState.data as HeatmapCluster).riskLevel || 'N/A'}</div>
-                </div>
-              </div>
-            )}
-            
-            {tooltipState.type === 'anomaly' && tooltipState.data && (
-              <div>
-                <div className="font-semibold text-red-900 mb-2">Anomaly Detected</div>
-                <div className="space-y-1 text-sm text-gray-700">
-                  <div>Type: {(tooltipState.data as HeatmapAnomaly).anomalyType || 'N/A'}</div>
-                  <div>Severity: {(tooltipState.data as HeatmapAnomaly).severity || 'N/A'}</div>
-                  <div>Confidence: {((tooltipState.data as HeatmapAnomaly).confidence * 100).toFixed(1)}%</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  };
-
-  // ===== LAYER CONTROLS COMPONENT =====
-  
-  const LayerControls = () => {
-    if (!enableControls) return null;
-
-    return (
-      <motion.div 
-        className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20 p-3"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="space-y-2">
-          <div className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-            <MdLayers className="w-4 h-4 mr-2" />
-            Layers
-          </div>
-          {Object.entries(layerVisibility).map(([layer, visible]) => (
-            <motion.button
-              key={layer}
-              onClick={() => setLayerVisibility(prev => ({ ...prev, [layer]: !visible }))}
-              className={`flex items-center space-x-2 p-2 rounded text-xs font-medium transition-colors w-full ${
-                visible 
-                  ? 'bg-blue-100 text-blue-800' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {visible ? <MdVisibility className="w-3 h-3" /> : <MdVisibilityOff className="w-3 h-3" />}
-              <span className="capitalize">{layer}</span>
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
-    );
-  };
-
-  // ===== ZOOM CONTROLS COMPONENT =====
-  
-  const ZoomControls = () => {
-    if (!enableControls) return null;
-
-    return (
-      <motion.div 
-        className="absolute bottom-4 right-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex flex-col">
-          <motion.button
-            className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setZoomLevel(prev => Math.min(20, prev + 1))}
-          >
-            <MdZoomIn className="w-5 h-5 text-gray-700" />
-          </motion.button>
-          <motion.button
-            className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setZoomLevel(prev => Math.max(1, prev - 1))}
-          >
-            <MdZoomOut className="w-5 h-5 text-gray-700" />
-          </motion.button>
-          <motion.button
-            className="p-3 hover:bg-gray-100 transition-colors rounded-b-lg"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <MdFullscreen className="w-5 h-5 text-gray-700" />
-          </motion.button>
-        </div>
-      </motion.div>
-    );
-  };
-
-  // ===== LOADING OVERLAY =====
-  
-  const LoadingOverlay = () => {
-    if (!isLoading) return null;
-
-    return (
-      <motion.div
-        className="absolute inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <div className="bg-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center space-x-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="text-lg font-medium text-gray-900">Loading heatmap...</span>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  // ===== RENDER COMPONENT =====
-
-  return (
-    <div 
-      ref={containerRef}
-      className={`heatmap-visualization relative ${className}`} 
-      style={style}
-      onMouseMove={hideTooltip}
-    >
-      {/* Main Map Component */}
-      <MapLibreMap
-        data={mapData}
-        bounds={bounds}
-        layerVisibility={layerVisibility}
-        onBoundsChange={handleBoundsChange}
-        onPointClick={handlePointClick}
-        onClusterClick={handleClusterClick}
-        onAnomalyClick={handleAnomalyClick}
-        isLoading={isLoading}
-        onMapInstanceReady={() => setMapReady(true)}
-      />
-
-      {/* Layer Controls */}
-      <LayerControls />
-
-      {/* Zoom Controls */}
-      <ZoomControls />
-
-      {/* Advanced Tooltip */}
-      <AdvancedTooltip />
-
-      {/* Loading Overlay */}
-      <AnimatePresence>
-        <LoadingOverlay />
-      </AnimatePresence>
-
-      {/* Error Display */}
-      {error && (
-        <motion.div
-          className="absolute top-4 right-4 z-50 bg-red-100 border border-red-300 rounded-lg p-4 max-w-md"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <div className="flex items-center space-x-2">
-            <MdWarning className="w-5 h-5 text-red-600" />
-            <span className="text-red-800 font-medium">Error loading data</span>
-          </div>
-          <p className="text-red-700 text-sm mt-1">{error}</p>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
-// ===== MAIN HEATMAP VISUALIZATION COMPONENT =====
-
-export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.memo(({
-  initialBounds,
-  enableRealtime = true, // Disabled for performance
-  enableControls = true,
-  enableSidebar = true, // Disabled for performance
-  enableTooltips = true,
-  enableAnalytics = true, // Disabled for performance
-  className = '',
-  style = {},
-  onPointClick,
-  onClusterClick,
-  onAnomalyClick,
-  onBoundsChange,
-  onDataUpdate
-}) => {
-  const { mapInstance, setMapInstance } = useMap();
-  
-  // ===== STATE MANAGEMENT =====
-  
-  const [bounds, setBounds] = useState<RegionBounds>(initialBounds);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedLayer, setSelectedLayer] = useState<'heatmap' | 'clusters' | 'points' | 'all'>('all');
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
     x: 0,
@@ -462,88 +181,197 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     type: null
   });
 
-  // ===== HOOKS =====
+  const [advancedFilters, setAdvancedFilters] = useState({
+    timeRange: { start: null as Date | null, end: null as Date | null },
+    categories: Object.keys(CATEGORY_ICONS),
+    intensityRange: [0, 1] as [number, number],
+    priorityLevels: ['low', 'medium', 'high', 'critical']
+  });
 
-  // Main heatmap data hook
+  // ===== DATA HOOKS =====
+
+  // Main heatmap data hook with enhanced configuration
   const {
     state,
     actions,
     isLoading,
     error,
-    refetch
+    refetch,
+    exportData,
+    getMetrics
   } = useHeatmapData({
     bounds,
     config: {
       analytics: {
         enableClustering: enableAnalytics,
         enableAnomalyDetection: enableAnalytics,
-        enableTrends: enableAnalytics,
-        enablePredictions: false,
-        historicalDepth: 30,
-        refreshInterval: 300000
+        enableTrends: enableAdvancedFeatures,
+        enablePredictions: enableAnalytics && enableAdvancedFeatures,
+        enableHeatmapGeneration: true,
+        enableSpatialAnalysis: enableAdvancedFeatures,
+        historicalDepth: enableAdvancedFeatures ? 90 : 30,
+        refreshInterval: enablePerformanceMode ? 60000 : 30000,
+        clusterThreshold: CLUSTER_THRESHOLD,
+        anomalyThreshold: 0.8,
+        predictionHorizon: 24, // hours
+        spatialResolution: enablePerformanceMode ? 'low' : 'high'
       },
       realtime: {
         enabled: enableRealtime,
-        updateInterval: 30000,
+        updateInterval: enablePerformanceMode ? 30000 : 5000,
         autoRefresh: true,
-        pushNotifications: true,
-        anomalyAlerts: true,
-        predictionUpdates: false
+        pushNotifications: enableAdvancedFeatures,
+        anomalyAlerts: enableAnalytics,
+        predictionUpdates: enableAnalytics && enableAdvancedFeatures,
+        batchUpdates: enablePerformanceMode,
+        throttleUpdates: enablePerformanceMode
+      },
+      visualization: {
+        heatmapOpacity: 0.6,
+        clusterRadius: enablePerformanceMode ? 30 : 20,
+        pointRadius: enablePerformanceMode ? 8 : 5,
+        colorScheme: 'viridis',
+        intensityScale: 'logarithmic',
+        animationDuration: enablePerformanceMode ? 150 : 300,
+        enableSmoothing: !enablePerformanceMode,
+        enableInterpolation: !enablePerformanceMode
+      },
+      performance: {
+        enableVirtualization: enablePerformanceMode,
+        batchSize: DATA_BATCH_SIZE,
+        renderThrottle: RENDER_THROTTLE_MS,
+        enableLOD: enablePerformanceMode, // Level of Detail
+        maxDataPoints: enablePerformanceMode ? 5000 : 10000,
+        enableCaching: true,
+        enableCompression: enablePerformanceMode
       }
     },
     enableRealtime,
-    enablePerformanceTracking: true,
-    onUpdate: onDataUpdate,
+    enablePerformanceTracking: enableAdvancedFeatures,
+    filters: advancedFilters,
+    onUpdate: (data) => {
+      setLastUpdateTime(new Date());
+      setPerformanceMetrics({
+        renderTime: performance.now(),
+        dataPoints: data?.dataPoints?.length || 0,
+        clusters: data?.clusters?.length || 0,
+        anomalies: data?.anomalies?.length || 0
+      });
+      onDataUpdate?.(data);
+    },
     onError: (err) => {
-      // Check if it's a backend unavailable error (demo mode)
+      // Enhanced error handling with fallback modes
       if ((err as any).code === 'BACKEND_UNAVAILABLE') {
-        console.warn('Using demo mode - backend server not available:', err.message);
-        // You could show a toast notification here if needed
+        console.warn('Backend unavailable, switching to demo mode:', err.message);
+        // Could trigger demo data loading here
+      } else if ((err as any).code === 'RATE_LIMITED') {
+        console.warn('Rate limited, reducing update frequency');
+        // Could automatically switch to performance mode
       } else {
         console.error('Heatmap data error:', err);
       }
     }
   });
 
-  // WebSocket hook for real-time updates
+  // WebSocket hook for real-time updates with advanced features
   const {
     isConnected: wsConnected,
     subscribe: wsSubscribe,
     unsubscribe: wsUnsubscribe,
-    status: wsStatus
+    status: wsStatus,
+    metrics: wsMetrics
   } = useHeatmapWebSocket({
     autoConnect: enableRealtime,
-    enableNotifications: true,
+    enableNotifications: enableAdvancedFeatures,
+    enableMetrics: enableAdvancedFeatures,
+    reconnectAttempts: 5,
+    reconnectDelay: 2000,
+    heartbeatInterval: 30000,
     onUpdate: (updateEvent) => {
-      // Handle real-time updates
       console.log('Real-time update received:', updateEvent);
-      refetch();
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+      
+      // Throttle updates for performance
+      renderTimeoutRef.current = setTimeout(() => {
+        refetch();
+      }, RENDER_THROTTLE_MS);
     },
     onNotification: (notification) => {
       console.log('Real-time notification:', notification);
+      // Could trigger toast notifications here
+    },
+    onConnectionChange: (connected) => {
+      console.log('WebSocket connection changed:', connected);
     }
   });
 
   // ===== MEMOIZED VALUES =====
 
-  const layerVisibility = useMemo(() => {
+  // Enhanced layer visibility based on selection and performance mode
+  const computedLayerVisibility = useMemo(() => {
+    const base = { ...layerVisibility };
+    
+    // Override based on selected layer
     switch (selectedLayer) {
       case 'heatmap':
-        return { heatmap: true, clusters: false, points: false, boundaries: false };
+        return { ...base, heatmap: true, clusters: false, points: false };
       case 'clusters':
-        return { heatmap: false, clusters: true, points: false, boundaries: false };
+        return { ...base, heatmap: false, clusters: true, points: false };
       case 'points':
-        return { heatmap: false, clusters: false, points: true, boundaries: false };
+        return { ...base, heatmap: false, clusters: false, points: true };
       case 'all':
       default:
-        return { heatmap: true, clusters: true, points: true, boundaries: true };
+        return base;
     }
-  }, [selectedLayer]);
+  }, [selectedLayer, layerVisibility]);
+
+  // Processed data with advanced filtering
+  const processedData = useMemo(() => {
+    if (!state.data) return { dataPoints: [], clusters: [], anomalies: [] };
+
+    const startTime = performance.now();
+    
+    let { dataPoints = [], clusters = [], anomalies = [] } = state.data;
+
+    // Apply advanced filters
+    if (advancedFilters.timeRange.start || advancedFilters.timeRange.end) {
+      dataPoints = dataPoints.filter(point => {
+        const pointTime = new Date(point.timestamp);
+        return (!advancedFilters.timeRange.start || pointTime >= advancedFilters.timeRange.start) &&
+               (!advancedFilters.timeRange.end || pointTime <= advancedFilters.timeRange.end);
+      });
+    }
+
+    if (advancedFilters.categories.length < Object.keys(CATEGORY_ICONS).length) {
+      dataPoints = dataPoints.filter(point => 
+        advancedFilters.categories.includes(point.metadata?.category || 'other')
+      );
+    }
+
+    if (advancedFilters.intensityRange[0] > 0 || advancedFilters.intensityRange[1] < 1) {
+      dataPoints = dataPoints.filter(point => 
+        point.value >= advancedFilters.intensityRange[0] && 
+        point.value <= advancedFilters.intensityRange[1]
+      );
+    }
+
+    // Performance optimization: limit data points if in performance mode
+    if (enablePerformanceMode && dataPoints.length > DATA_BATCH_SIZE) {
+      dataPoints = dataPoints.slice(0, DATA_BATCH_SIZE);
+    }
+
+    const processingTime = performance.now() - startTime;
+    console.log(`Data processing took ${processingTime.toFixed(2)}ms`);
+
+    return { dataPoints, clusters, anomalies };
+  }, [state.data, advancedFilters, enablePerformanceMode]);
 
   // ===== EVENT HANDLERS =====
 
   const handleBoundsChange = useCallback((newBounds: RegionBounds) => {
-    // Validate bounds before setting
+    // Enhanced bounds validation
     const isValidBounds = 
       newBounds.southwest[0] >= -180 && newBounds.southwest[0] <= 180 &&
       newBounds.southwest[1] >= -90 && newBounds.southwest[1] <= 90 &&
@@ -557,20 +385,35 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
       return;
     }
     
+    // Calculate bounds area for performance optimization
+    const boundsArea = Math.abs(
+      (newBounds.northeast[0] - newBounds.southwest[0]) *
+      (newBounds.northeast[1] - newBounds.southwest[1])
+    );
+    
+    // Adjust clustering threshold based on zoom level
+    const clusterThreshold = boundsArea > 1 ? CLUSTER_THRESHOLD * 2 : CLUSTER_THRESHOLD;
+    
     setBounds(newBounds);
     actions.setBounds(newBounds);
+    actions.updateConfig({ 
+      analytics: { 
+        ...state.config.analytics, 
+        clusterThreshold 
+      } 
+    });
     
-    if (onBoundsChange) {
-      onBoundsChange(newBounds);
+    // Types for callback
+    interface OnBoundsChangeCallback {
+      (bounds: RegionBounds): void;
     }
-  }, [actions, onBoundsChange]);
+
+    (onBoundsChange as OnBoundsChangeCallback | undefined)?.(newBounds);
+  }, [actions, state.config.analytics, onBoundsChange]);
 
   const handlePointClick = useCallback((point: HeatmapDataPoint, event: React.MouseEvent) => {
     actions.selectPoint(point);
-    
-    if (onPointClick) {
-      onPointClick(point);
-    }
+    onPointClick?.(point);
 
     if (enableTooltips) {
       setTooltip({
@@ -585,10 +428,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
 
   const handleClusterClick = useCallback((cluster: HeatmapCluster, event: React.MouseEvent) => {
     actions.selectCluster(cluster);
-    
-    if (onClusterClick) {
-      onClusterClick(cluster);
-    }
+    onClusterClick?.(cluster);
 
     if (enableTooltips) {
       setTooltip({
@@ -603,10 +443,7 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
 
   const handleAnomalyClick = useCallback((anomaly: HeatmapAnomaly, event: React.MouseEvent) => {
     actions.selectAnomaly(anomaly);
-    
-    if (onAnomalyClick) {
-      onAnomalyClick(anomaly);
-    }
+    onAnomalyClick?.(anomaly);
 
     if (enableTooltips) {
       setTooltip({
@@ -620,49 +457,66 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
   }, [actions, onAnomalyClick, enableTooltips]);
 
   const handleLayerToggle = useCallback((layer: string, visible: boolean) => {
-    const layers = state.visualization.layers as any;
-    actions.updateVisualization({
-      layers: {
-        ...layers,
-        [layer]: { ...layers[layer], visible }
-      }
-    });
-  }, [actions, state.visualization.layers]);
+    setLayerVisibility(prev => ({
+      ...prev,
+      [layer]: visible
+    }));
+  }, []);
 
   const handleConfigChange = useCallback((newConfig: Partial<HeatmapVisualizationConfig>) => {
     actions.updateVisualization(newConfig);
+    onConfigChange?.(newConfig);
+  }, [actions, onConfigChange]);
+
+  const handleHeatmapConfigChange = useCallback((newConfig: Partial<HeatmapConfig>) => {
+    actions.updateConfig(newConfig);
   }, [actions]);
 
   const handleRefresh = useCallback(() => {
+    const startTime = performance.now();
     refetch();
+    const refreshTime = performance.now() - startTime;
+    console.log(`Data refresh took ${refreshTime.toFixed(2)}ms`);
   }, [refetch]);
 
-  const handleExport = useCallback(async (format: 'json' | 'csv' | 'geojson') => {
+  const handleExport = useCallback(async (format: 'json' | 'csv' | 'geojson' | 'kml') => {
     try {
-      await actions.exportData(format);
+      const startTime = performance.now();
+      await exportData();
+      const exportTime = performance.now() - startTime;
+      console.log(`Data export took ${exportTime.toFixed(2)}ms`);
     } catch (error) {
       console.error('Export failed:', error);
     }
-  }, [actions]);
+  }, [exportData, enableAnalytics, enableAdvancedFeatures, advancedFilters]);
+
+  const handleFilterChange = useCallback((newFilters: Partial<typeof advancedFilters>) => {
+    setAdvancedFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
 
   // ===== EFFECTS =====
 
-  // WebSocket subscription management
+  // WebSocket subscription management with bounds updates
   useEffect(() => {
     if (enableRealtime && wsConnected) {
-      const subscriptionId = wsSubscribe('main-region', bounds);
+      const subscriptionId = wsSubscribe('main-region', bounds, {
+        includeAnalytics: enableAnalytics,
+        includePredictions: enableAdvancedFeatures,
+        filters: advancedFilters
+      });
+      
       return () => {
         if (subscriptionId) {
           wsUnsubscribe(subscriptionId);
         }
       };
     }
-  }, [enableRealtime, wsConnected, wsSubscribe, wsUnsubscribe, bounds]);
+  }, [enableRealtime, wsConnected, wsSubscribe, wsUnsubscribe, bounds, enableAnalytics, enableAdvancedFeatures, advancedFilters]);
 
   // Handle click outside to close tooltip
   useEffect(() => {
-    const handleClickOutside = (_event: MouseEvent) => {
-      if (tooltip.visible) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tooltip.visible && tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
         setTooltip(prev => ({ ...prev, visible: false }));
       }
     };
@@ -673,83 +527,179 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
     }
   }, [tooltip.visible]);
 
-  // ===== RENDER =====
+  // Performance monitoring
+  useEffect(() => {
+    if (enableAdvancedFeatures) {
+      const interval = setInterval(() => {
+        const metrics = getMetrics();
+        setPerformanceMetrics(prev => ({ ...prev, ...metrics }));
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [enableAdvancedFeatures, getMetrics]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // ===== RENDER COMPONENTS =====
+
+  const StatusIndicator = () => (
+    <motion.div 
+      className="absolute top-4 right-4 z-50 flex items-center space-x-2"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Real-time connection status */}
+      {enableRealtime && (
+        <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+          wsConnected 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${
+            wsConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+          }`} />
+          <span>{wsConnected ? 'Live' : 'Offline'}</span>
+        </div>
+      )}
+
+      {/* Performance metrics */}
+      {enableAdvancedFeatures && (
+        <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+          {performanceMetrics.dataPoints} points
+        </div>
+      )}
+
+      {/* Last update time */}
+      <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+        {lastUpdateTime.toLocaleTimeString()}
+      </div>
+    </motion.div>
+  );
+
+  const ErrorDisplay = () => {
+    if (!error) return null;
+
+    const isDemoMode = error.includes('BACKEND_UNAVAILABLE') || error.includes('demo');
+    
+    return (
+      <motion.div
+        className={`absolute top-4 left-4 right-4 z-50 px-4 py-3 rounded-lg border ${
+          isDemoMode 
+            ? 'bg-blue-100 border-blue-400 text-blue-700' 
+            : 'bg-red-100 border-red-400 text-red-700'
+        }`}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            {isDemoMode ? (
+              <>
+                <MdInfo className="w-5 h-5" />
+                <span>🔧 Demo Mode: Using sample data (backend unavailable)</span>
+              </>
+            ) : (
+              <>
+                <MdWarning className="w-5 h-5" />
+                <span>{error}</span>
+              </>
+            )}
+          </div>
+          <button 
+            onClick={() => actions.clearError()}
+            className="hover:opacity-70 transition-opacity"
+          >
+            ×
+          </button>
+        </div>
+      </motion.div>
+    );
+  };
+
+  const LoadingOverlay = () => {
+    if (!isLoading) return null;
+
+    return (
+      <motion.div
+        className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-30"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <div className="bg-white rounded-lg p-4 shadow-lg flex items-center space-x-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <span className="text-sm font-medium">Loading map data...</span>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // ===== MAIN RENDER =====
 
   return (
     <HeatmapErrorBoundary>
       <div 
-        className={`heatmap-visualization relative w-full h-full bg-gray-50 ${className}`}
+        ref={containerRef}
+        className={`heatmap-visualization relative w-full h-full bg-gray-50 overflow-hidden ${className}`}
         style={style}
       >
-        {/* Demo Mode Indicator */}
-        {error && (error.includes('BACKEND_UNAVAILABLE') || error.includes('demo')) && (
-          <div className="absolute top-4 left-4 right-4 z-50 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-            <div className="flex justify-between items-center">
-              <span>🔧 Demo Mode: Using sample data (backend unavailable)</span>
-              <button 
-                onClick={() => actions.clearError()}
-                className="text-blue-700 hover:text-blue-900"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Status Indicators */}
+        <StatusIndicator />
 
         {/* Error Display */}
-        {error && !error.includes('BACKEND_UNAVAILABLE') && !error.includes('demo') && (
-          <div className="absolute top-4 left-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            <div className="flex justify-between items-center">
-              <span>{error}</span>
-              <button 
-                onClick={() => actions.clearError()}
-                className="text-red-700 hover:text-red-900"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          <ErrorDisplay />
+        </AnimatePresence>
 
-        {/* Loading Overlay - only show when actually loading, with reduced opacity */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-30">
-            <div className="bg-white rounded-lg p-4 shadow-lg flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-sm font-medium">Loading map data...</span>
-            </div>
-          </div>
-        )}
+        {/* Loading Overlay */}
+        <AnimatePresence>
+          <LoadingOverlay />
+        </AnimatePresence>
 
         {/* Main Map Container */}
         <div className="relative w-full h-full">
-          <MapLibreMap
-            data={state.data || { dataPoints: [] }}
-            bounds={bounds}
-            layerVisibility={layerVisibility}
-            onBoundsChange={handleBoundsChange}
-            onPointClick={handlePointClick}
-            onClusterClick={handleClusterClick}
-            onAnomalyClick={handleAnomalyClick}
-            isLoading={isLoading}
-            onMapInstanceReady={(map) => setMapInstance(map)}
-          />
+          <Suspense fallback={<div className="w-full h-full bg-gray-200 animate-pulse" />}>
+            <MapLibreMap
+              data={processedData}
+              bounds={bounds}
+              layerVisibility={computedLayerVisibility}
+              onBoundsChange={handleBoundsChange}
+              onPointClick={handlePointClick}
+              onClusterClick={handleClusterClick}
+              onAnomalyClick={handleAnomalyClick}
+              isLoading={isLoading}
+              config={state.config}
+              onMapInstanceReady={(map) => {
+                setMapInstance(map);
+                setMapReady(true);
+              }}
+            />
+          </Suspense>
 
-          {/* SearchAndNavigate overlay - MOBILE ONLY */}
+          {/* Mobile Search Overlay */}
           <div className="absolute top-5 left-4 right-4 md:hidden z-50">
-            <div className="bg-white rounded-full">
-              {mapInstance ? (
-                <SearchAndNavigate 
+            <div className="bg-white rounded-full shadow-lg">
+              {mapInstance && mapReady ? (
+                <SearchAndNavigate
                   map={mapInstance}
-                  className="w-full search-and-navigate-input"
+                  className="w-full"
                   placeholder="Search for locations..."
                   mobile={true}
                   darkMode={false}
                   onLocationSelect={(location) => {
-                    console.log('Selected location from mobile:', location);
                     if (location.geometry?.coordinates) {
                       const [longitude, latitude] = location.geometry.coordinates;
-                      const buffer = 0.01; // ~1km buffer
+                      const buffer = 0.01;
                       handleBoundsChange({
                         southwest: [longitude - buffer, latitude - buffer],
                         northeast: [longitude + buffer, latitude + buffer]
@@ -758,59 +708,380 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
                   }}
                 />
               ) : (
-                <div className="flex items-center w-full p-2">
-                  <div className="w-6 h-6 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                <div className="flex items-center w-full p-3">
+                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                   <span className="text-sm text-gray-600">Map loading...</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Controls Panel */}
-          {enableControls && (
+          {/* Advanced Controls */}
+          {enableControls && mapReady && (
             <HeatmapControls
               config={state.config}
               visualization={state.visualization}
               selectedLayer={selectedLayer}
+              layerVisibility={layerVisibility}
               isLoading={isLoading}
               isConnected={wsConnected}
               wsStatus={wsStatus}
-              onLayerChange={(layer) => setSelectedLayer(layer as 'heatmap' | 'clusters' | 'points' | 'all')}
+              wsMetrics={wsMetrics}
+              performanceMetrics={performanceMetrics}
+              filters={advancedFilters}
+              enableAdvancedFeatures={enableAdvancedFeatures}
+              onLayerChange={(layer) => setSelectedLayer(layer as typeof selectedLayer)}
               onLayerToggle={handleLayerToggle}
-              onConfigChange={handleConfigChange}
+              onConfigChange={handleHeatmapConfigChange}
               onVisualizationChange={handleConfigChange}
               onRefresh={handleRefresh}
               onExport={handleExport}
+              onFilterChange={handleFilterChange}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
             />
           )}
 
-          {/* Sidebar */}
-          {enableSidebar && sidebarOpen && (
-            <HeatmapSidebar
-              isOpen={sidebarOpen}
-              data={state.data}
-              config={state.config}
-              onConfigChange={handleConfigChange}
-              onClose={() => setSidebarOpen(false)}
-              className="absolute left-0 top-0 h-full w-80 bg-white shadow-lg z-40"
-            />
-          )}
+          {/* Enhanced Sidebar */}
+          <AnimatePresence>
+            {enableSidebar && sidebarOpen && (
+              <HeatmapSidebar
+                isOpen={sidebarOpen}
+                data={state.data}
+                config={state.config}
+                selectedPoint={state.selectedPoint}
+                selectedCluster={state.selectedCluster}
+                selectedAnomaly={state.selectedAnomaly}
+                performanceMetrics={performanceMetrics}
+                filters={advancedFilters}
+                enableAdvancedFeatures={enableAdvancedFeatures}
+                onConfigChange={handleConfigChange}
+                onFilterChange={handleFilterChange}
+                onClose={() => setSidebarOpen(false)}
+                className="absolute left-0 top-0 h-full w-80 bg-white shadow-lg z-40"
+              />
+            )}
+          </AnimatePresence>
 
-          {/* Legend */}
+          {/* Enhanced Legend */}
           <HeatmapLegend
             config={state.visualization}
-            data={state.data}
+            data={processedData}
             selectedLayer={selectedLayer}
+            layerVisibility={computedLayerVisibility}
+            categoryIcons={CATEGORY_ICONS}
             className="absolute bottom-4 left-4"
           />
 
-          {/* Tooltip */}
+          {/* Advanced Tooltip */}
           {enableTooltips && tooltip.visible && tooltip.data && (
-            <HeatmapTooltip
-              data={tooltip.data}
-              position={tooltip.visible ? [tooltip.x, tooltip.y] : null}
-            />
+            <div ref={tooltipRef}>
+              <HeatmapTooltip
+                data={tooltip.data}
+                type={tooltip.type}
+                position={[tooltip.x, tooltip.y]}
+                categoryIcons={CATEGORY_ICONS}
+                enableAdvancedFeatures={enableAdvancedFeatures}
+                onClose={() => setTooltip(prev => ({ ...prev, visible: false }))}
+              />
+            </div>
+          )}
+
+          {/* Performance Monitor (Advanced Features) */}
+          {enableAdvancedFeatures && enableControls && (
+            <motion.div 
+              className="absolute top-20 right-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20 p-3 max-w-xs"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              <div className="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                <MdAnalytics className="w-3 h-3 mr-1" />
+                Performance
+              </div>
+              <div className="space-y-1 text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>Render:</span>
+                  <span>{performanceMetrics.renderTime.toFixed(1)}ms</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Points:</span>
+                  <span>{performanceMetrics.dataPoints.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Clusters:</span>
+                  <span>{performanceMetrics.clusters}</span>
+                </div>
+                {wsMetrics && (
+                  <div className="flex justify-between">
+                    <span>Latency:</span>
+                    <span>{wsMetrics.latency}ms</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Quick Action Buttons (Advanced Features) */}
+          {enableAdvancedFeatures && enableControls && (
+            <motion.div 
+              className="absolute bottom-20 right-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
+              <div className="flex flex-col">
+                <motion.button
+                  onClick={() => handleRefresh()}
+                  className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200 group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Refresh Data"
+                >
+                  <MdRefresh className={`w-4 h-4 text-gray-700 ${isLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
+                </motion.button>
+                
+                <motion.button
+                  onClick={() => handleExport('geojson')}
+                  className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200 group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Export Data"
+                >
+                  <MdDownload className="w-4 h-4 text-gray-700 group-hover:translate-y-0.5 transition-transform" />
+                </motion.button>
+
+                <motion.button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Toggle Analytics Panel"
+                >
+                  <MdTimeline className="w-4 h-4 text-gray-700" />
+                </motion.button>
+
+                <motion.button
+                  className="p-3 hover:bg-gray-100 transition-colors rounded-b-lg"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Filter Options"
+                  onClick={() => {
+                    // Toggle advanced filter panel
+                    console.log('Toggle advanced filters');
+                  }}
+                >
+                  <MdFilterList className="w-4 h-4 text-gray-700" />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Notification Center (Advanced Features) */}
+          {enableAdvancedFeatures && state.notifications && state.notifications.length > 0 && (
+            <motion.div 
+              className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {state.notifications.slice(0, 3).map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  className={`mb-2 p-3 rounded-lg shadow-lg border-l-4 ${
+                    notification.type === 'warning' 
+                      ? 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                      : notification.type === 'error'
+                      ? 'bg-red-50 border-red-400 text-red-800'
+                      : 'bg-blue-50 border-blue-400 text-blue-800'
+                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center space-x-2">
+                      {notification.type === 'warning' && <MdWarning className="w-4 h-4" />}
+                      {notification.type === 'error' && <MdWarning className="w-4 h-4" />}
+                      {notification.type === 'info' && <MdInfo className="w-4 h-4" />}
+                      <span className="text-sm font-medium">{notification.title}</span>
+                    </div>
+                    <button 
+                      onClick={() => actions.dismissNotification(notification.id)}
+                      className="text-current hover:opacity-70 transition-opacity ml-2"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {notification.message && (
+                    <p className="text-xs mt-1 ml-6">{notification.message}</p>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Zoom and Navigation Controls */}
+          {enableControls && (
+            <motion.div 
+              className="absolute bottom-4 right-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex flex-col">
+                <motion.button
+                  className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200 group"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    if (mapInstance) {
+                      mapInstance.zoomIn();
+                    }
+                  }}
+                  title="Zoom In"
+                >
+                  <MdZoomIn className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+                </motion.button>
+                
+                <motion.button
+                  className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200 group"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    if (mapInstance) {
+                      mapInstance.zoomOut();
+                    }
+                  }}
+                  title="Zoom Out"
+                >
+                  <MdZoomOut className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+                </motion.button>
+                
+                <motion.button
+                  className="p-3 hover:bg-gray-100 transition-colors border-b border-gray-200 group"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    if (mapInstance) {
+                      mapInstance.fitBounds([
+                        [bounds.southwest[0], bounds.southwest[1]],
+                        [bounds.northeast[0], bounds.northeast[1]]
+                      ]);
+                    }
+                  }}
+                  title="Fit to Bounds"
+                >
+                  <MdPlace className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+                </motion.button>
+                
+                <motion.button
+                  className="p-3 hover:bg-gray-100 transition-colors rounded-b-lg group"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    if (document.fullscreenElement) {
+                      document.exitFullscreen();
+                    } else {
+                      containerRef.current?.requestFullscreen();
+                    }
+                  }}
+                  title="Toggle Fullscreen"
+                >
+                  <MdFullscreen className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Layer Toggle Controls */}
+          {enableControls && (
+            <motion.div 
+              className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20 p-3 max-w-xs"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  <MdLayers className="w-4 h-4 mr-2" />
+                  Map Layers
+                </div>
+                
+                {/* Layer Selection Tabs */}
+                <div className="flex space-x-1 mb-3">
+                  {(['all', 'heatmap', 'clusters', 'points'] as const).map((layer) => (
+                    <motion.button
+                      key={layer}
+                      onClick={() => setSelectedLayer(layer)}
+                      className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        selectedLayer === layer
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {layer === 'all' ? 'All' : layer.charAt(0).toUpperCase() + layer.slice(1)}
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Individual Layer Toggles */}
+                <div className="space-y-1">
+                  {Object.entries(layerVisibility).map(([layer, visible]) => (
+                    <motion.button
+                      key={layer}
+                      onClick={() => handleLayerToggle(layer, !visible)}
+                      className={`flex items-center justify-between w-full p-2 rounded text-xs font-medium transition-colors ${
+                        visible 
+                          ? 'bg-blue-50 text-blue-800 border border-blue-200' 
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        {visible ? <MdVisibility className="w-3 h-3" /> : <MdVisibilityOff className="w-3 h-3" />}
+                        <span className="capitalize">{layer.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+                      </div>
+                      
+                      {/* Data count indicators */}
+                      {layer === 'points' && (
+                        <span className="text-xs opacity-60">{processedData.dataPoints.length}</span>
+                      )}
+                      {layer === 'clusters' && (
+                        <span className="text-xs opacity-60">{processedData.clusters.length}</span>
+                      )}
+                      {layer === 'anomalies' && (
+                        <span className="text-xs opacity-60">{processedData.anomalies.length}</span>
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Advanced Layer Options */}
+                {enableAdvancedFeatures && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <div className="text-xs font-semibold text-gray-600 mb-2">Advanced Options</div>
+                    <div className="space-y-1">
+                      <motion.button
+                        className="flex items-center justify-between w-full p-2 rounded text-xs hover:bg-gray-100 transition-colors"
+                        whileHover={{ scale: 1.01 }}
+                        onClick={() => {
+                          // Toggle performance mode
+                          console.log('Toggle performance mode');
+                        }}
+                      >
+                        <span>Performance Mode</span>
+                        <div className={`w-8 h-4 rounded-full ${enablePerformanceMode ? 'bg-blue-500' : 'bg-gray-300'} relative transition-colors`}>
+                          <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${enablePerformanceMode ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                        </div>
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           )}
         </div>
       </div>
@@ -818,4 +1089,8 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
   );
 });
 
+// ===== COMPONENT DISPLAY NAME =====
+HeatmapVisualization.displayName = 'HeatmapVisualization';
+
+// ===== EXPORT =====
 export default HeatmapVisualization;

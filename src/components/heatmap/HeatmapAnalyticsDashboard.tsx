@@ -1,9 +1,16 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapProvider } from '../../contexts/MapContext';
-import { RegionBounds, HeatmapDataPoint, HeatmapCluster, HeatmapAnomaly } from '../../types/heatmap';
+import { MapProvider } from '../../contexts/EnhancedMapContext';
+import { RegionBounds, HeatmapDataPoint, HeatmapCluster } from '../../types/heatmap';
 import { HeatmapVisualization } from './HeatmapVisualization';
+import { HeatmapControls } from './HeatmapControls';
+import { HeatmapSidebar } from './HeatmapSidebar';
+import { HeatmapLegend } from './HeatmapLegend';
+import { HeatmapTooltip } from './HeatmapTooltip';
+import { HeatmapErrorBoundary } from './HeatmapErrorBoundary';
+import { MobileHeatmapInterface } from './MobileHeatmapInterface';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
+import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
 import SearchAndNavigate from '../common/SearchAndNavigate';
 
 // React Icons for category-specific markers
@@ -132,24 +139,38 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
     northeast: [77.8, 13.2]   // Better for mobile performance
   });
 
-  // Map instance reference for SearchAndNavigate
-  // const [mapInstance, setMapInstance] = useState<any>(null);
+  // Mobile detection state
+  const [isMobile, setIsMobile] = useState(false);
 
   // Advanced UI state management
-  // const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  // const [zoomLevel, setZoomLevel] = useState<number>(12);
   const [selectedPoint, setSelectedPoint] = useState<HeatmapDataPoint | null>(null);
   const [selectedCluster, setSelectedCluster] = useState<HeatmapCluster | null>(null);
-  // const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [selectedLayer, setSelectedLayer] = useState<'heatmap' | 'clusters' | 'points' | 'all'>('all');
   const [layerVisibility, setLayerVisibility] = useState({
     heatmap: true,
     clusters: true,
     points: true,
     boundaries: false,
     predictions: false,
-    anomalies: true
+    anomalies: true,
+    realtime: true,
+    heatmapIntensity: true,
+    historicalData: false
   });
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+
+  // Mobile detection effect
+  useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      const isMobileDevice = width < 768; // md breakpoint in Tailwind
+      setIsMobile(isMobileDevice);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Use the advanced heatmap data hook with real-time capabilities
   const { state: heatmapState, isLoading, error, refetch } = useHeatmapData({
@@ -175,21 +196,17 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
     enableRealtime: true
   });
 
-  // WebSocket integration for real-time updates (simplified for now)
-  // const { connectionStatus, lastUpdate } = useHeatmapWebSocket({
-  //   bounds,
-  //   onUpdate: (data) => {
-  //     console.log('Real-time update received:', data);
-  //   },
-  //   onAnomaly: (anomaly) => {
-  //     console.log('Anomaly detected:', anomaly);
-  //     // Show real-time anomaly notification
-  //   }
-  // });
-
-  // Mock connection status for now
-  const connectionStatus = 'connected' as const;
-  const lastUpdate = new Date();
+  // WebSocket integration for real-time updates
+  const { status: wsStatus, isConnected: isWsConnected } = useHeatmapWebSocket({
+    onUpdate: (data) => {
+      console.log('Real-time update received:', data);
+      // Trigger a refetch of data to get latest updates
+      refetch();
+    },
+    onError: (error) => {
+      console.error('WebSocket error:', error);
+    }
+  });
 
   // Handle viewport bounds change with debouncing
   const handleBoundsChange = useCallback((newBounds: RegionBounds) => {
@@ -253,47 +270,132 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
     setSidebarOpen(true);
   }, []);
 
+  // Calculate analytics for mobile interface
+  const analytics = useMemo(() => ({
+    totalIssues: heatmapState?.data?.dataPoints?.length || 0,
+    criticalIssues: heatmapState?.data?.dataPoints?.filter(p => 
+      p.metadata?.urgency === 'critical' || p.metadata?.urgency === 'emergency'
+    ).length || 0,
+    trendDirection: 'stable' as const, // This would come from real analytics
+    riskLevel: calculateRiskZone as 'low' | 'medium' | 'high' | 'critical'
+  }), [heatmapState?.data, calculateRiskZone]);
+
   // Render the advanced dashboard with comprehensive UI
   return (
-    <MapProvider>
-      <div className={`advanced-heatmap-dashboard w-full h-full ${className} relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100`}>
-        
-        {/* ===== MAIN MAP CONTAINER ===== */}
-        <div className="absolute inset-0 w-full h-full">
-          <HeatmapVisualization
-            initialBounds={bounds}
-            enableRealtime={true}
-            enableControls={true}
-            enableSidebar={false}
-            enableTooltips={true}
-            enableAnalytics={true}
+    <HeatmapErrorBoundary>
+      <MapProvider>
+        {/* Mobile Interface for smaller screens */}
+        {isMobile ? (
+          <MobileHeatmapInterface
+            bounds={bounds}
+            data={heatmapState?.data || {}}
+            analytics={analytics}
+            isLoading={isLoading}
+            onRefresh={refetch}
             onBoundsChange={handleBoundsChange}
             onPointClick={handlePointClick}
             onClusterClick={handleClusterClick}
-            className="w-full h-full"
-            style={{ width: '100%', height: '100%' }}
+            className={className}
           />
-        </div>
+        ) : (
+          /* Desktop Interface for larger screens */
+          <div className={`advanced-heatmap-dashboard w-full h-full ${className} relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100`}>
+            
+            {/* ===== MAIN MAP CONTAINER ===== */}
+            <div className="absolute inset-0 w-full h-full">
+              <HeatmapVisualization
+                initialBounds={bounds}
+                enableRealtime={true}
+                enableControls={false} // We'll use our own controls
+                enableSidebar={false}  // We'll use our own sidebar
+                enableTooltips={true}
+                enableAnalytics={true}
+                onBoundsChange={handleBoundsChange}
+                onPointClick={handlePointClick}
+                onClusterClick={handleClusterClick}
+                className="w-full h-full"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
 
-        {/* ===== MOBILE SEARCH OVERLAY ===== */}
-        <AnimatePresence>
-          <motion.div 
-            className="absolute top-4 left-4 right-4 z-50 md:hidden"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30">
-              <div className="p-3">
+            {/* ===== ADVANCED HEATMAP CONTROLS ===== */}
+            <HeatmapControls
+              visualization={{
+                colorScheme: 'viridis',
+                opacity: 0.7,
+                radius: 20,
+                blur: 15,
+                maxZoom: 18,
+                minZoom: 1,
+                clusterRadius: 50,
+                showLabels: true,
+                showTooltips: true,
+                animationDuration: 300,
+                layers: {
+                  heatmap: { visible: layerVisibility.heatmap, opacity: 0.7, radius: 20, blur: 15, weight: 'intensity', colorStops: [[0, 'rgba(0,255,0,0)'], [0.5, 'rgba(255,255,0,0.5)'], [1, 'rgba(255,0,0,1)']] },
+                  clusters: { visible: layerVisibility.clusters, opacity: 0.8, radius: 30, strokeWidth: 2, strokeColor: '#333' },
+                  points: { visible: layerVisibility.points, opacity: 1, radius: 8, strokeWidth: 1 },
+                  boundaries: { visible: layerVisibility.boundaries, opacity: 0.3, strokeWidth: 2, strokeColor: '#666', fillOpacity: 0.1 }
+                }
+              }}
+              selectedLayer={selectedLayer}
+              layerVisibility={{
+                ...layerVisibility,
+                realtime: isWsConnected,
+                heatmapIntensity: true,
+                historicalData: false
+              }}
+              isLoading={false}
+              isConnected={isWsConnected}
+              wsStatus={wsStatus}
+              performanceMetrics={{
+                renderTime: 0,
+                dataProcessingTime: 0,
+                networkLatency: 0,
+                memoryUsage: 0,
+                frameRate: 60,
+                fpsAverage: 60,
+                dataPointCount: heatmapState?.data?.dataPoints?.length || 0,
+                cacheHitRate: 0.95,
+                updateFrequency: 1,
+                errorRate: 0.01
+              }}
+              filters={{
+                timeRange: { start: null, end: null },
+                categories: Object.keys(CATEGORY_CONFIG),
+                intensityRange: [0, 1],
+                priorityLevels: ['low', 'medium', 'high', 'critical']
+              }}
+              enableAdvancedFeatures={true}
+              onLayerChange={(layer) => setSelectedLayer(layer)}
+              onLayerToggle={(layer, visible) => {
+                setLayerVisibility(prev => ({ ...prev, [layer]: visible }));
+              }}
+              onConfigChange={(config) => console.log('Config changed:', config)}
+              onVisualizationChange={(config) => console.log('Visualization changed:', config)}
+              onRefresh={refetch}
+              onExport={(format) => console.log('Export format:', format)}
+              onFilterChange={(filters) => console.log('Filters changed:', filters)}
+              onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+              className="absolute top-4 right-4 z-40"
+            />
+
+            {/* ===== DESKTOP SEARCH BAR ===== */}
+            <motion.div 
+              className="absolute top-4 left-4 z-50"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/20 p-2">
                 <SearchAndNavigate 
                   map={null} // Will be connected when map is ready
-                  placeholder="Search locations, issues..." 
-                  className="w-full"
-                  mobile={true}
+                  placeholder="Search locations, civic issues..." 
+                  className="w-80"
                   onLocationSelect={(location) => {
                     if (location.geometry?.coordinates) {
                       const [longitude, latitude] = location.geometry.coordinates;
-                      const buffer = 0.01; // ~1km buffer
+                      const buffer = 0.01;
                       handleBoundsChange({
                         southwest: [longitude - buffer, latitude - buffer],
                         northeast: [longitude + buffer, latitude + buffer]
@@ -302,35 +404,131 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                   }}
                 />
               </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+            </motion.div>
 
-        {/* ===== DESKTOP SEARCH BAR ===== */}
-        <motion.div 
-          className="absolute top-4 left-4 z-50 hidden md:block"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/20 p-2">
-            <SearchAndNavigate 
-              map={null} // Will be connected when map is ready
-              placeholder="Search locations, civic issues..." 
-              className="w-80"
-              onLocationSelect={(location) => {
-                if (location.geometry?.coordinates) {
-                  const [longitude, latitude] = location.geometry.coordinates;
-                  const buffer = 0.01;
-                  handleBoundsChange({
-                    southwest: [longitude - buffer, latitude - buffer],
-                    northeast: [longitude + buffer, latitude + buffer]
-                  });
+            {/* ===== HEATMAP LEGEND ===== */}
+            <HeatmapLegend
+              config={{
+                colorScheme: 'viridis',
+                opacity: 0.7,
+                radius: 20,
+                blur: 15,
+                maxZoom: 18,
+                minZoom: 1,
+                clusterRadius: 50,
+                showLabels: true,
+                showTooltips: true,
+                animationDuration: 300,
+                layers: {
+                  heatmap: { visible: layerVisibility.heatmap, opacity: 0.7, radius: 20, blur: 15, weight: 'intensity', colorStops: [[0, 'rgba(0,255,0,0)'], [0.5, 'rgba(255,255,0,0.5)'], [1, 'rgba(255,0,0,1)']] },
+                  clusters: { visible: layerVisibility.clusters, opacity: 0.8, radius: 30, strokeWidth: 2, strokeColor: '#333' },
+                  points: { visible: layerVisibility.points, opacity: 1, radius: 8, strokeWidth: 1 },
+                  boundaries: { visible: layerVisibility.boundaries, opacity: 0.3, strokeWidth: 2, strokeColor: '#666', fillOpacity: 0.1 }
                 }
               }}
+              data={heatmapState?.data || { dataPoints: [], clusters: [], anomalies: [] }}
+              selectedLayer={selectedLayer}
+              layerVisibility={layerVisibility}
+              categoryIcons={Object.fromEntries(
+                Object.entries(CATEGORY_CONFIG).map(([key, value]) => [
+                  key, { icon: value.icon, color: value.color, label: value.label }
+                ])
+              )}
+              onLayerToggle={(layer: string, visible: boolean) => {
+                setLayerVisibility(prev => ({ ...prev, [layer]: visible }));
+              }}
+              className="absolute bottom-4 left-4 z-40"
             />
+
+            {/* ===== ADVANCED SIDEBAR ===== */}
+            <HeatmapSidebar
+              isOpen={sidebarOpen}
+              data={heatmapState?.data}
+              selectedPoint={selectedPoint}
+              selectedCluster={selectedCluster}
+              selectedAnomaly={null}
+              performanceMetrics={{
+                renderTime: 0,
+                dataProcessingTime: 0,
+                networkLatency: 0,
+                memoryUsage: 0,
+                frameRate: 60,
+                fpsAverage: 60,
+                dataPointCount: heatmapState?.data?.dataPoints?.length || 0,
+                cacheHitRate: 0.95,
+                updateFrequency: 1,
+                errorRate: 0.01
+              }}
+              enableAdvancedFeatures={true}
+              onAction={(action, pointId) => console.log('Action:', action, pointId)}
+              onClose={() => {
+                setSidebarOpen(false);
+                setSelectedPoint(null);
+                setSelectedCluster(null);
+              }}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40"
+            />
+
+            {/* ===== HEATMAP TOOLTIP (for hover interactions) ===== */}
+            {(selectedPoint || selectedCluster) && (
+              <HeatmapTooltip
+                data={selectedPoint || selectedCluster!}
+                type={selectedPoint ? 'point' : selectedCluster ? 'cluster' : null}
+                position={
+                  selectedPoint
+                    ? [selectedPoint.location.coordinates[0], selectedPoint.location.coordinates[1]]
+                    : selectedCluster
+                    ? [selectedCluster.center[0], selectedCluster.center[1]]
+                    : [0, 0]
+                }
+                categoryIcons={CATEGORY_CONFIG}
+                visible={!!(selectedPoint || selectedCluster)}
+                onClose={() => {
+                  setSelectedPoint(null);
+                  setSelectedCluster(null);
+                }}
+              />
+            )}
+
+            {/* ===== LOADING OVERLAY ===== */}
+            <AnimatePresence>
+              {isLoading && (
+                <motion.div
+                  className="absolute inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="bg-white rounded-xl p-6 shadow-2xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span className="text-lg font-medium text-gray-900">Loading heatmap data...</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ===== ERROR NOTIFICATION ===== */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  className="absolute top-20 left-4 right-4 z-50 bg-red-100 border border-red-300 rounded-lg p-4"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <MdWarning className="w-5 h-5 text-red-600" />
+                    <span className="text-red-800 font-medium">Error loading heatmap data</span>
+                  </div>
+                  <p className="text-red-700 text-sm mt-1">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
           </div>
-        </motion.div>
+        )}
 
         {/* ===== ADVANCED STATS DASHBOARD ===== */}
         <motion.div 
@@ -379,20 +577,20 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             <div className="flex items-center justify-between mb-3 p-2 bg-white/30 rounded-lg">
               <div className="flex items-center space-x-2">
                 <div className={`w-2 h-2 rounded-full ${
-                  connectionStatus === 'connected' ? 'bg-green-400' :
-                  connectionStatus === 'connecting' || connectionStatus === 'reconnecting' ? 'bg-yellow-400' :
+                  wsStatus === 'connected' ? 'bg-green-400' :
+                  wsStatus === 'connecting' || wsStatus === 'reconnecting' ? 'bg-yellow-400' :
                   'bg-red-400'
                 }`} />
                 <span className="text-xs font-medium text-gray-700">
-                  {connectionStatus === 'connected' ? 'Connected' :
-                   connectionStatus === 'connecting' ? 'Connecting' :
-                   connectionStatus === 'reconnecting' ? 'Reconnecting' :
+                  {wsStatus === 'connected' ? 'Connected' :
+                   wsStatus === 'connecting' ? 'Connecting' :
+                   wsStatus === 'reconnecting' ? 'Reconnecting' :
                    'Disconnected'}
                 </span>
               </div>
-              {lastUpdate && (
+              {isWsConnected && (
                 <span className="text-xs text-gray-500">
-                  Updated {Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s ago
+                  Real-time updates active
                 </span>
               )}
             </div>
@@ -668,8 +866,8 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
           )}
         </AnimatePresence>
 
-      </div>
     </MapProvider>
+    </HeatmapErrorBoundary>
   );
 };
 
