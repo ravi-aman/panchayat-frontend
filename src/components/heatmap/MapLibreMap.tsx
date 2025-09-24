@@ -563,7 +563,7 @@ const MapLibreMap: React.FC<MapLibreMapProps> = ({
         style={{ position: 'relative' }}
       />
       
-      Performance metrics overlay
+      {/* Performance metrics overlay */}
       {currentLODLevel && (
         <div className="performance-overlay absolute  md:top-4 left-4 bg-white bg-opacity-70 text-black p-2 rounded text-xs">
           <div>LOD: {currentLODLevel.name}</div>
