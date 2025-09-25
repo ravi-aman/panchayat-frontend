@@ -52,13 +52,13 @@ const Footer = () => {
                 href={`mailto:${PANCHAYAT_BRANDING.contact.email}`}
                 className="border border-gray-600 px-6 py-3 max-sm:px-4 max-sm:py-2 rounded-full text-sm flex items-center hover:bg-blue-600 hover:border-blue-600 transition-colors"
               >
-                📧 {PANCHAYAT_BRANDING.contact.email}
+                 {PANCHAYAT_BRANDING.contact.email}
               </a>
               <a
                 href={`tel:${PANCHAYAT_BRANDING.contact.phone}`}
                 className="border border-gray-600 px-6 py-3 max-sm:px-4 max-sm:py-2 rounded-full text-sm flex items-center hover:bg-green-600 hover:border-green-600 transition-colors"
               >
-                📱 {PANCHAYAT_BRANDING.contact.phone}
+                {PANCHAYAT_BRANDING.contact.phone}
               </a>
             </div>
 
