@@ -26,7 +26,7 @@ export default function Navbar() {
           )}
         </button>
         <motion.img
-          src="./assets/logo1.png"
+          src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
           alt="panchayat"
           className="w-35 hover:cursor-pointer"
           whileHover={{ scale: 1.05 }}
@@ -37,7 +37,7 @@ export default function Navbar() {
         className={`bg-white max-sm:${isMenuOpen ? 'block' : 'hidden'} shadow-md px-10 py-4 flex max-sm:flex-col max-sm:h-[90vh] items-center max-sm:justify-around justify-between`}
       >
         <motion.img
-          src="./assets/logo1.png"
+          src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
           alt="Logo"
           className="w-35 hover:cursor-pointer max-sm:hidden"
           whileHover={{ scale: 1.05 }}

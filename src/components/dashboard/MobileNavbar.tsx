@@ -33,7 +33,7 @@ export default function MobileNavbar() {
       style={{ height: 56, zIndex: 9999 }}
     >
       <a href="/">
-        <img src="/assets/logo1.png" alt="Panchayat" className="h-14 w-auto" />
+        <img src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png" alt="Panchayat" className="h-14 w-auto" />
       </a>
 
       <div className="flex items-center space-x-3">

@@ -112,14 +112,14 @@ const DashboardNavbar: React.FC = () => {
       <div className="flex items-center space-x-4">
         <div className="flex items-center pr-36">
           <img
-            src="/assets/logo1.png"
+            src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
             alt="Panchayat"
             className="h-14 cursor-pointer"
             onClick={() => (window.location.href = '/')}
           />
         </div>
         {isHeatmapPage ? (
-          <div className="relative flex items-center px-3 py-1 rounded-full w-80">
+          <div className="relative flex items-center px-3 py-1 rounded-full w-75">
             {/* Desktop view - use full SearchAndNavigate in navbar */}
             {mapInstance ? (
               <SearchAndNavigate 
