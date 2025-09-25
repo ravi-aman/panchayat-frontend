@@ -8,8 +8,8 @@ import { HeatmapTooltip } from './HeatmapTooltip';
 import { MobileHeatmapInterface } from './MobileHeatmapInterface';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
 import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
-import SearchAndNavigate from '../common/SearchAndNavigate';
-import { useMap } from '../../contexts/MapContext';
+// import SearchAndNavigate from '../common/SearchAndNavigate';
+// import { useMap } from '../../contexts/MapContext';
 
 // React Icons for category-specific markers
 import {
@@ -125,7 +125,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
   className = ''
 }) => {
   // Get map instance from context
-  const { mapInstance } = useMap();
+  // const { mapInstance } = useMap();
 
   // Advanced map and region state with advanced settings
   const [bounds, setBounds] = useState<RegionBounds>({
