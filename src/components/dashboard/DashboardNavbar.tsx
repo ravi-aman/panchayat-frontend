@@ -75,7 +75,7 @@ const DashboardNavbar: React.FC = () => {
       {/* Mobile search overlay for heatmap page */}
       {isHeatmapPage && (
         <div className="absolute top-20 left-4 right-4 md:hidden z-50">
-          <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-lg p-2">
+          <div className="bg-white/95 backdrop-blur-md rounded-full shadow-lg p-2">
             {mapInstance ? (
               <SearchAndNavigate 
                 map={mapInstance}
@@ -119,7 +119,7 @@ const DashboardNavbar: React.FC = () => {
           />
         </div>
         {isHeatmapPage ? (
-          <div className="relative flex items-center px-3 py-1 rounded-md w-80">
+          <div className="relative flex items-center px-3 py-1 rounded-full w-80">
             {/* Desktop view - use full SearchAndNavigate in navbar */}
             {mapInstance ? (
               <SearchAndNavigate 

@@ -55,3 +55,14 @@
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* Disable scrolling on heatmap pages */
+body:has(.heatmap-page) {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+html:has(.heatmap-page) {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
