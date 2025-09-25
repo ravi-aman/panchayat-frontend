@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 function Ready() {
   return (
@@ -11,19 +12,20 @@ function Ready() {
     >
       <div className="flex flex-col justify-center items-center">
         <h1 className="text-6xl max-sm:text-3xl font-bold text-center">
-          Ready to start your <span className="text-blue-600">Journey</span> ?
+          Ready to transform your <span className="text-blue-600">Community</span> ?
         </h1>
         <p className="text-center py-10 max-sm:py-6 text-2xl max-sm:w-full max-sm:text-xl w-[600px]">
-          Start your journey with NEECOP today and scale your business with confidence!
+          {PANCHAYAT_BRANDING.cta.secondary} - Start reporting issues in your area today!
         </p>
         <motion.button
+          onClick={() => (window.location.href = '/dashboard/feed')}
           className="bg-blue-600 py-5 max-sm:py-2 max-sm:px-8 px-12 font-bold text-white rounded-4xl my-5 max-sm:my-0 hover:bg-blue-500"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut', delay: 0.3 }}
           viewport={{ once: true }}
         >
-          Start Now!
+          {PANCHAYAT_BRANDING.cta.primary}
         </motion.button>
       </div>
     </motion.div>

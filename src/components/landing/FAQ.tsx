@@ -11,7 +11,7 @@ const FAQ = () => {
     >
       <section className="py-12 max-sm:py-0">
         <div className="mx-auto">
-          <h2 className="text-xl font-semibold text-gray-900">Creative Freedom</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Civic Engagement</h2>
           <div className="flex flex-col md:flex-row md:justify-between items-start mt-4">
             <div className="flex flex-col gap-4 ">
               <h3 className="text-5xl max-sm:text-3xl font-semibold text-gray-900">
@@ -22,7 +22,7 @@ const FAQ = () => {
               </div>
             </div>
             <p className="text-gray-600 text-[18px] max-sm:w-full max-w-[500px] mt-4 md:mt-0">
-              Your success is our priority. Our team is here to assist you at every step of the way.
+              Empowering citizens to create better communities through transparent, data-driven civic engagement.
             </p>
           </div>
 
@@ -35,28 +35,28 @@ const FAQ = () => {
           >
             {[
               {
-                title: 'How does NEECOP help in securing investments?',
-                text: 'We connect MSMEs and Business Venture with potential investors by providing visibility, data-driven insights, and networking opportunities within our ecosystem.',
+                title: 'How does Panchayat help resolve civic issues?',
+                text: 'Citizens report issues with photos/location, AI auto-categorizes and routes to relevant departments, and the community can track resolution in real-time on our interactive map.',
               },
               {
-                title: 'Is there a process to list my Business Venture/MSME for investment?',
-                text: 'Yes! You can submit your business details through our platform. Our team will review and help connect you with relevant investors and stakeholders.',
+                title: 'Can I report issues via WhatsApp?',
+                text: 'Yes! Our WhatsApp bot allows one-tap issue reporting. Just send a photo and location, and we\'ll handle the rest - categorization, department routing, and status updates.',
               },
               {
-                title: 'Does NEECOP provide valuation and financial insights for businesses?',
-                text: 'Yes! We are working on an independent valuation system for MSMEs to help them assess their financial standing and investment potential.',
+                title: 'How does the AI-powered classification work?',
+                text: 'Our ML models analyze photos and text to automatically detect issue types (potholes, garbage, streetlights) and smart duplicate detection merges similar reports for clarity.',
               },
               {
-                title: 'How does NEECOP ensure credibility in partnerships?',
-                text: 'We verify businesses and investors through a structured due diligence process, ensuring trustworthy collaborations.',
+                title: 'How does Panchayat ensure government accountability?',
+                text: 'Public dashboards show resolved vs pending issues for each ward/city. Trending issues auto-escalate to higher authorities and get tagged on social media for maximum visibility.',
               },
               {
-                title: 'What is the NEECOP Discovery Platform?',
-                text: 'The NEECOP Discovery Platform is a one-stop digital ecosystem where MSMEs, Business Venture, and investors can connect, explore collaboration opportunities, and gain industry insights',
+                title: 'What is the Panchayat Interactive Map?',
+                text: 'Our map shows India down to ward/colony levels with live issue markers color-coded by status, heatmaps for issue density, and department/service overlays for complete transparency.',
               },
               {
-                title: 'Can I list my business on the Discovery Platform?',
-                text: 'Yes! By creating a profile on the Discovery Platform, you can showcase your business to potential investors, partners, and customers. ',
+                title: 'Can NGOs and organizations adopt issues?',
+                text: 'Yes! NGOs, RWAs, and private organizations can adopt issues as CSR opportunities, fostering community collaboration and faster resolution through collective action.',
               },
             ].map((faq, index) => (
               <motion.div

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 const Step = () => {
   return (
@@ -15,15 +16,17 @@ const Step = () => {
            From Civic Challenges to a Future-Ready City
           </p>
           <h1 className="text-4xl max-sm:text-3xl font-bold text-gray-900 leading-tight mb-4">
-            Diversifying Partnerships <br />
-            for Exponential Growth.
+            How {PANCHAYAT_BRANDING.name} <br />
+            Transforms Communities
           </h1>
           <p className="text-gray-600 mb-6 font-semibold text-start">
-            Connect with investors, partners, industry experts and fellow entrepreneurs to unlock
-            the full potential of your Business Venture.
+            {PANCHAYAT_BRANDING.elevator}
           </p>
-          <button className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition">
-            Get Started
+          <button 
+            onClick={() => (window.location.href = '/dashboard/feed')}
+            className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition"
+          >
+            {PANCHAYAT_BRANDING.cta.primary}
           </button>
         </motion.div>
         <div className="w-full mt-10 max-sm:hidden">

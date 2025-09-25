@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
+import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 export default function SublimeProducts() {
   return (
     <motion.div
-      className="relative p-25 max-sm:p-10 py-20"
+      className="relative md:p-25 max-sm:p-6 py-20"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -17,7 +18,7 @@ export default function SublimeProducts() {
         }}
       />
 
-      <div className="p-8 max-sm:p-0 rounded-lg relative">
+      <div className="md:p-8 max-sm:p-0 rounded-lg relative">
         <motion.div
           className="space-y-2 mb-15"
           initial={{ opacity: 0, x: -50 }}
@@ -25,10 +26,10 @@ export default function SublimeProducts() {
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-sm text-black font-medium">NEECOP</h2>
+          <h2 className="text-sm text-black font-medium">{PANCHAYAT_BRANDING.name.toUpperCase()}</h2>
           <div className="flex max-sm:flex-col max-sm:gap-5 items-start justify-between">
             <h1 className="text-6xl max-sm:text-3xl font-semibold">
-              Our <br /> Services!
+              Our <br /> Features!
             </h1>
             <div className="flex flex-col gap-2 max-sm:w-full w-[500px]">
               <div className="flex flex-row gap-5">
@@ -52,8 +53,7 @@ export default function SublimeProducts() {
                 />
               </div>
               <h1 className="text-[18px]">
-                NEECOP provides innovative solutions for entrepreneurs, investors, and businesses to
-                thrive.
+                {PANCHAYAT_BRANDING.tagline} - Comprehensive civic engagement platform for transparent governance.
               </h1>
             </div>
           </div>
@@ -62,34 +62,34 @@ export default function SublimeProducts() {
         <div className="relative grid grid-cols-3 max-sm:grid-cols-2 max-sm:gap-3 gap-6">
           {[
             {
-              title: 'Seamless Collaboration',
+              title: 'One-Tap Issue Reporting',
               image: `./landing/chat.png`,
-              text: ' Connect with mentors, investors, and like-minded professionals.',
+              text: 'Mobile-first interface with photo, video, voice, and location tagging.',
             },
             {
-              title: 'Smart Investment Platform ',
+              title: 'Interactive Maps',
               image: `./landing/call.png`,
-              text: 'Match with potential investors and funding opportunities.',
+              text: 'Live issue markers with color-coded status and heatmaps for density analysis.',
             },
             {
-              title: 'Real-Time Business Intelligence',
+              title: 'AI-Powered Intelligence',
               image: `./landing/hand.png`,
-              text: 'Access critical data for informed decision-making.',
+              text: 'Smart issue classification and duplicate detection with priority scoring.',
             },
             {
-              title: 'Enhanced Productivity',
+              title: 'Government Dashboard',
               image: `./landing/time.png`,
-              text: 'Data driven insights and automation to streamline operations.',
+              text: 'Smart routing engine auto-assigns issues to relevant departments.',
             },
             {
-              title: 'Business Support',
+              title: 'Social Amplification',
               image: `./landing/cloud.png`,
-              text: 'Instant access to expert guidance and assistance. ',
+              text: 'Share issues to WhatsApp, Twitter with auto-escalation for trending problems.',
             },
             {
-              title: 'On Demand Notifications',
+              title: 'Real-time Notifications',
               image: `./landing/speaker.png`,
-              text: 'Custom notifications to track your applications and much more.',
+              text: 'Status updates from report to resolution with community collaboration.',
             },
           ].map((item, index) => (
             <motion.div

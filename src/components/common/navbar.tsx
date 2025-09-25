@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { IoClose, IoMenu } from 'react-icons/io5';
 import { useAuth } from '../../contexts/AuthContext';
+import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 export default function Navbar() {
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -25,23 +26,30 @@ export default function Navbar() {
             <IoMenu className="self-center" size={30} />
           )}
         </button>
-        <motion.img
-          src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
-          alt="panchayat"
-          className="w-35 hover:cursor-pointer"
-          whileHover={{ scale: 1.05 }}
-        />
+        <motion.div className="flex flex-col items-center">
+          <img
+            src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
+            alt={PANCHAYAT_BRANDING.name}
+            className="w-35 hover:cursor-pointer"
+          />
+          {/* <span className="text-xs text-gray-600 text-center mt-1">{PANCHAYAT_BRANDING.tagline}</span> */}
+        </motion.div>
         <div className="w-full" />
       </div>
       <div
         className={`bg-white max-sm:${isMenuOpen ? 'block' : 'hidden'} shadow-md px-10 py-4 flex max-sm:flex-col max-sm:h-[90vh] items-center max-sm:justify-around justify-between`}
       >
-        <motion.img
-          src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
-          alt="Logo"
-          className="w-35 hover:cursor-pointer max-sm:hidden"
+        <motion.div 
+          className="flex flex-col items-center max-sm:hidden"
           whileHover={{ scale: 1.05 }}
-        />
+        >
+          <img
+            src="https://temp-data-aws.s3.ap-south-1.amazonaws.com/uploads/company/68d1c8708e09707f4bb3cf4f/Black_and_White_Minimalist_Music_Studio_Logo__3__1758784871943_a73efde3.png"
+            alt={PANCHAYAT_BRANDING.name}
+            className="w-35 hover:cursor-pointer"
+          />
+          {/* <span className="text-xs text-gray-600 text-center mt-1">{PANCHAYAT_BRANDING.tagline}</span> */}
+        </motion.div>
 
         {/* <div className="flex max-sm:w-full max-sm:flex-col max-sm:p-5 space-x-10 gap-8  ">
                     {["Home", "Funds", "Startups", "MSME's", "Features"].map((item) => (

@@ -9,8 +9,14 @@ export const PANCHAYAT_BRANDING = {
   url: 'https://panchayat.me',
   
   // Vision & Mission
-  vision: 'Transform how local governance works by creating a real-time, map-driven, social platform where every pothole, broken streetlight, or sanitation issue is not just reported — but resolved through collective action, accountability, and open data.',
-  mission: 'Empowering citizens to report, track, and resolve everyday issues in their community while enabling governments, NGOs, and organizations to respond transparently and effectively.',
+  vision: 'Panchayat is a next-generation civic engagement platform that empowers citizens to report, track, and resolve everyday issues in their community while enabling governments, NGOs, and organizations to respond transparently and effectively.',
+  mission: 'Transform how local governance works by creating a real-time, map-driven, social platform where every pothole, broken streetlight, or sanitation issue is not just reported — but resolved through collective action, accountability, and open data.',
+  
+  // Big Vision
+  bigVision: 'Panchayat = Civic LinkedIn + Google Maps + Twitter for issues. Every ward in India mapped. Every department connected. Every citizen empowered. A national network of real-time civic engagement and accountability.',
+  
+  // Impact Statement
+  impactStatement: 'For Citizens → A transparent, participatory way to improve their city. For Governments → Faster identification & resolution, reduced complaints backlog, better accountability. For Communities & NGOs → A tool to mobilize action, drive campaigns, and measure impact. For India → A unified civic engagement system aligned with Digital India & Smart Cities Mission.',
   
   // Key Value Propositions
   valueProps: [
@@ -50,73 +56,99 @@ export const PANCHAYAT_BRANDING = {
   features: {
     citizenReporting: {
       title: 'Citizen-Centric Issue Reporting',
-      description: 'Mobile-first interface with photo, video, voice, and location tagging. One-tap reporting through app or WhatsApp bot.',
+      description: 'Mobile-first interface with photo, video, voice, and location tagging. One-tap reporting through app or WhatsApp bot. Duplicate issue detection → merges reports into threads for clarity.',
       benefits: [
-        'Instant photo/video reporting with GPS location',
-        'WhatsApp bot integration for easy access',
-        'Voice-to-text issue descriptions',
-        'Duplicate issue detection and merging'
+        'Mobile-first interface with photo, video, voice, and location tagging',
+        'One-tap reporting through app or WhatsApp bot',
+        'Duplicate issue detection → merges reports into threads for clarity',
+        'Real-time issue feed with social features (like, comment, upvote, repost)'
       ]
     },
     interactiveMap: {
-      title: 'Interactive Map Visualization',
-      description: 'Real-time map powered by MapLibre + OSM showing live issue status across your community.',
+      title: 'Interactive Map (Powered by MapLibre + OSM + Govt GIS)',
+      description: 'Base map of India down to district, ward, and colony levels with comprehensive layers and real-time tracking.',
       benefits: [
-        'Live issue markers with color-coded status',
-        'Heatmaps for issue density analysis',
-        'Ward-wise and department overlays',
-        'Historical trend visualization'
+        'Base map of India down to district, ward, and colony levels',
+        'Layers for roads, utilities, public services, water bodies, civic assets',
+        'Live issue markers → color-coded by status (Open, In-progress, Resolved)',
+        'Heatmaps for issue density + time-based trends',
+        'Department/service overlays (electricity offices, sanitation depots, ward offices)'
       ]
     },
     transparency: {
       title: 'Transparency & Social Amplification',
-      description: 'Public dashboards and social sharing to ensure accountability and community engagement.',
+      description: 'Each issue has a thread → all duplicates + updates linked together. Users can share issues to WhatsApp, Twitter, and other platforms.',
       benefits: [
-        'Public resolution tracking dashboards',
-        'Auto-escalation for trending issues',
-        'Social media integration and sharing',
-        'Department performance leaderboards'
+        'Each issue has a thread → all duplicates + updates linked together',
+        'Users can share issues to WhatsApp, Twitter, and other platforms',
+        'If an issue trends, it\'s auto-escalated to higher authorities & tagged on social media',
+        'Public dashboard shows resolved vs pending issues for each ward/city'
       ]
     },
     govDashboard: {
       title: 'Government & Admin Dashboard',
-      description: 'Smart routing engine for departments with comprehensive analytics and accountability tools.',
+      description: 'Smart routing engine → auto-assigns issues to relevant department with comprehensive analytics and accountability tools.',
       benefits: [
-        'Auto-assignment to relevant departments',
-        'Status tracking from report to resolution',
-        'Performance analytics and insights',
-        'Ward-wise resolution comparisons'
+        'Smart routing engine → auto-assigns issues to relevant department (sanitation, PWD, electricity)',
+        'Filter & categorize by location, priority, or department',
+        'Status updates: Acknowledged → In-progress → Resolved → Verified',
+        'Analytics: Avg. resolution time, most common issues, ward-wise performance',
+        'Accountability: Leaderboards for departments/wards with best performance'
       ]
     },
     aiPowered: {
       title: 'AI-Powered Intelligence',
-      description: 'Machine learning for smart issue classification, duplicate detection, and priority scoring.',
+      description: 'Image & text classification → auto-detect issue type. Duplicate detection → merges reports on same problem. Priority scoring based on impact.',
       benefits: [
-        'Automatic issue type classification',
-        'Smart duplicate detection and merging',
-        'Priority scoring based on impact',
-        'Predictive insights and trends'
+        'Image & text classification → auto-detect issue type (pothole, garbage, streetlight)',
+        'Duplicate detection → merges reports on same problem',
+        'Priority scoring → hospital road pothole > empty plot garbage',
+        'Insights & predictions → "Ward 12 has rising garbage complaints this month"'
       ]
     },
     community: {
-      title: 'Community Engagement',
-      description: 'Gamification and social features to build an active civic community.',
+      title: 'Engagement & Community',
+      description: 'Gamification → badges, rewards for active reporters. Community threads for local discussions. NGOs, RWAs can adopt issues.',
       benefits: [
-        'Citizen badges and reward system',
-        'Community discussion threads',
-        'NGO and corporate CSR partnerships',
-        'Monthly contributor recognition'
+        'Gamification → badges, rewards for active reporters',
+        'Community threads for local discussions',
+        'NGOs, RWAs, and private orgs can adopt issues (CSR opportunities)',
+        'Citizen leaderboard: Top contributors of the month in each area'
+      ]
+    },
+    scalableBackend: {
+      title: 'Scalable Backend',
+      description: 'APIs → Open for third-party civic integrations with resilient cloud infrastructure.',
+      benefits: [
+        'APIs → Open for third-party civic integrations',
+        'PostGIS + MongoDB for spatial + social data',
+        'ElasticSearch for search & classification',
+        'Queue workers for image processing & notifications',
+        'Resilient cloud infra → handles spikes in citizen reporting'
       ]
     }
   },
   
   // Technical Highlights
   tech: {
-    frontend: ['React Native (Mobile)', 'Next.js (Web)', 'MapLibre (Maps)', 'Real-time Updates'],
-    backend: ['Node.js + Express', 'GraphQL API', 'PostGIS (Geospatial)', 'MongoDB (Social)'],
-    integrations: ['OSM Maps', 'Bhuvan GIS', 'WhatsApp API', 'Twitter API', 'Government Data APIs'],
-    ai: ['Image Classification', 'Duplicate Detection', 'Priority Scoring', 'Predictive Analytics'],
-    infrastructure: ['Docker + Kubernetes', 'Cloud Native', 'Auto-scaling', 'High Availability']
+    frontend: ['React Native (mobile)', 'Next.js (web)', 'MapLibre (maps)'],
+    backend: ['Node.js + Express + GraphQL API', 'PostGIS (geospatial)', 'MongoDB (social features)'],
+    integrations: ['OSM', 'Bhuvan', 'data.gov.in', 'State GIS', 'WhatsApp/Twitter APIs'],
+    ai: ['ML models for classification', 'duplicate detection', 'priority scoring'],
+    infrastructure: ['Docker + Kubernetes for scalability']
+  },
+  
+  // Example User Flow
+  userFlow: {
+    steps: [
+      'A citizen sees a pothole → takes a photo → reports on Panchayat app',
+      'AI classifies it as "Road Issue" → auto-tags PWD Department',
+      'Issue appears on city map + shared on WhatsApp group',
+      '50 others upvote → visibility rises → Twitter bot tags @RanchiMunicipal',
+      'PWD updates status → "Work order issued"',
+      'Citizen gets push notification → "Your issue is being fixed"',
+      'After completion, others verify with photos → status = Resolved ✅'
+    ]
   },
   
   // Meta Information for SEO

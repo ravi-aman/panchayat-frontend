@@ -1,33 +1,41 @@
+import { PANCHAYAT_BRANDING } from '../config/branding';
+
 const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 px-6 py-12">
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-10">
-        <h1 className="text-3xl font-bold text-blue-700 mb-6">Privacy Policy</h1>
-        <p className="text-sm text-gray-500 mb-8">Effective Date: September 11, 2025</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-blue-700 mb-2">{PANCHAYAT_BRANDING.name} Privacy Policy</h1>
+          <p className="text-gray-600 mb-2">{PANCHAYAT_BRANDING.tagline}</p>
+          <p className="text-sm text-gray-500">Effective Date: September 25, 2025</p>
+        </div>
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
           <p>
-            We collect information you provide when you sign in with Google, such as your name,
-            email address, and profile picture. We may also collect usage data about how you
-            interact with our services.
+            {PANCHAYAT_BRANDING.name} collects information you provide when you sign in with Google, such as your name,
+            email address, and profile picture. We also collect civic issue reports including photos, location data,
+            and descriptions to help resolve community problems effectively.
           </p>
         </section>
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">2. How We Use Your Information</h2>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Authenticate you and provide login access.</li>
-            <li>Improve our services and user experience.</li>
-            <li>Communicate with you about updates or support.</li>
+            <li>Authenticate you and provide secure access to civic reporting features.</li>
+            <li>Route civic issues to appropriate government departments and authorities.</li>
+            <li>Display anonymized issue data on public maps for community transparency.</li>
+            <li>Improve our civic engagement platform and user experience.</li>
+            <li>Communicate with you about issue status updates and platform improvements.</li>
           </ul>
         </section>
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">3. Sharing of Information</h2>
           <p>
-            We do not sell or share your data, except when required by law or when working with
-            trusted service providers who help us operate our services.
+            {PANCHAYAT_BRANDING.name} shares civic issue data with relevant government departments and local authorities 
+            to facilitate resolution. We display anonymized issue statistics publicly to promote transparency, 
+            but do not sell your personal data to third parties.
           </p>
         </section>
 

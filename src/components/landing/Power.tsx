@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 export default function PowerSection() {
   return (
@@ -7,7 +8,7 @@ export default function PowerSection() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
       viewport={{ once: true }}
-      className="px-35 pb-20 max-sm:px-10 max-sm:pb-10"
+      className="px-35 pb-20 max-sm:px-6 max-sm:pb-10"
     >
       <section className="relative w-full py-16  max-sm:pb-0 bg-center bg-no-repeat inset-0 bg-cover">
         <div className="w-full">
@@ -27,10 +28,10 @@ export default function PowerSection() {
                 <img className="w-5" src="/landing/star2.png" alt="" />
               </div>
               <h1 className="text-5xl md:text-6xl max-sm:text-2xl mb-6 mt-6 mx-auto">
-                Power your business <br /> with Neecop
+                Power your city <br /> with {PANCHAYAT_BRANDING.name}
               </h1>
               <p className="text-gray-600 text-lg w-[500px] max-sm:w-full text-center">
-                Unlock growth opportunities with our intelligent ecosystem.
+                {PANCHAYAT_BRANDING.bigVision}
               </p>
             </div>
           </motion.div>
@@ -45,13 +46,13 @@ export default function PowerSection() {
             >
               <Feature
                 imageSrc="/landing/star.png"
-                title="Data-Driven Decision Making"
-                description="Track key business metrics in real-time."
+                title="Real-time Issue Tracking"
+                description="Live status updates from report to resolution with full transparency."
               />
               <Feature
                 imageSrc="/landing/cube.png"
-                title="Simplified Processes"
-                description="User-friendly solutions for effortless business management."
+                title="Interactive Maps"
+                description="Visual issue mapping with heatmaps and ward-wise analytics."
               />
             </motion.div>
 
@@ -78,13 +79,13 @@ export default function PowerSection() {
             >
               <Feature
                 imageSrc="/landing/plate.png"
-                title="Effective Communication"
-                description="Integrated chat and networking features."
+                title="Social Amplification"
+                description="Share issues on WhatsApp, Twitter for maximum community impact."
               />
               <Feature
                 imageSrc="/landing/cylinder.png"
-                title="Customizable Solutions"
-                description="Adapt tools based on your unique business needs."
+                title="AI-Powered Intelligence"
+                description="Smart classification and duplicate detection for efficient resolution."
               />
             </motion.div>
           </div>

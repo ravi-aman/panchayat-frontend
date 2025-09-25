@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 export default function OurValues() {
   return (
@@ -8,7 +9,7 @@ export default function OurValues() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
       viewport={{ once: true }}
-      className="relative px-25 pb-10 max-sm:mt-10 max-sm:px-10"
+      className="relative px-25 pb-10 max-sm:mt-10 max-sm:px-6"
     >
       <div
         className="absolute inset-0 bg-contain bg-no-repeat bg-center"
@@ -37,7 +38,7 @@ export default function OurValues() {
               viewport={{ once: true }}
               className="text-6xl max-sm:text-3xl font-semibold"
             >
-              Our Company's <br /> Values
+              Transforming Civic <br /> Engagement
             </motion.h1>
             <div className="flex flex-col max-sm:w-full gap-2 w-[500px]">
               <div className="flex flex-row gap-5">
@@ -51,8 +52,7 @@ export default function OurValues() {
                 viewport={{ once: true }}
                 className="text-[18px]"
               >
-                Partnerships drive mutual growth by combining strengths, expanding market reach, and
-                unlocking new opportunities for success.
+                {PANCHAYAT_BRANDING.impactStatement}
               </motion.h1>
             </div>
           </div>
@@ -64,12 +64,12 @@ export default function OurValues() {
               {
                 title: 'Our Mission',
                 image: '/landing/ourMission.png',
-                text: 'Creating a dynamic networking platform to transform the Business Venture and MSME landscape, fostering economic growth, innovation, and global competitiveness.',
+                text: PANCHAYAT_BRANDING.mission,
               },
               {
-                title: 'Our Value',
+                title: 'Our Vision',
                 image: '/landing/ourValue.png',
-                text: 'Fostering connections, leveraging technology, ensuring trust and promoting long-term growth for a thriving Business Venture & MSME ecosystem.',
+                text: PANCHAYAT_BRANDING.vision,
               },
             ].map((item, index) => (
               <motion.div
@@ -78,7 +78,7 @@ export default function OurValues() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 viewport={{ once: true }}
-                className="bg-white p-6 rounded-xl shadow-sm h-[350px]"
+                className="bg-white p-6 rounded-xl shadow-sm min-h-[350px]"
               >
                 <img className="w-15 h-15 mb-4" src={item.image} alt={item.title} />
                 <h3 className="text-3xl text-blue-500 font-semibold mb-3">{item.title}</h3>
@@ -100,16 +100,16 @@ export default function OurValues() {
           >
             {[
               {
-                title: 'Business Discovery & Collaboration',
-                text: 'Creating a seamless platform where MSMEs, Business Venture, and investors can connect, collaborate, and grow together.',
+                title: 'Citizen-Centric Issue Reporting',
+                text: PANCHAYAT_BRANDING.features.citizenReporting.description,
               },
               {
-                title: 'Financial Inclusion & Investment Readiness',
-                text: 'Helping businesses access funding, alternative capital sources, and investment networks for sustainable growth.',
+                title: 'AI-Powered Intelligence',
+                text: PANCHAYAT_BRANDING.features.aiPowered.description,
               },
               {
-                title: 'Technology & Digital Transformation',
-                text: 'Empowering MSMEs and Business Venture with tech driven insights and digital tools to improve operational efficiency and global competitiveness.',
+                title: 'Transparency & Social Amplification',
+                text: PANCHAYAT_BRANDING.features.transparency.description,
               },
             ].map((item, index) => (
               <motion.div
