@@ -68,6 +68,7 @@ interface HeatmapControlsProps {
   };
   fpsAverage?: number;
   enableAdvancedFeatures: boolean;
+  analyticsPanelOpen?: boolean;
   onLayerChange: (layer: 'heatmap' | 'clusters' | 'points' | 'all') => void;
   onLayerToggle: (layer: string, visible: boolean) => void;
   onConfigChange: (config: Partial<HeatmapConfig>) => void;
@@ -76,6 +77,8 @@ interface HeatmapControlsProps {
   onExport: (format: 'json' | 'csv' | 'geojson' | 'kml') => void;
   onFilterChange: (filters: any) => void;
   onSidebarToggle: () => void;
+  onAnalyticsToggle?: () => void;
+  onAnalyticsClose?: () => void;
   className?: string;
 }
 
@@ -169,6 +172,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
   filters,
   fpsAverage,
   enableAdvancedFeatures,
+  analyticsPanelOpen = false,
   onLayerChange,
   onLayerToggle,
   onConfigChange,
@@ -176,8 +180,9 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
   onRefresh,
   onExport,
   onFilterChange,
-  onSidebarToggle,
-  className = ''
+  onAnalyticsToggle,
+  onAnalyticsClose,
+  className,
 }) => {
   // ===== STATE =====
   
@@ -244,7 +249,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
       return { status: 'poor', color: 'text-red-500', bgColor: 'bg-red-100' };
     } else if (renderTime > 50 || memoryUsage > 60 || fps < 45) {
       return { status: 'fair', color: 'text-yellow-500', bgColor: 'bg-yellow-100' };
-    } else {
+    } else {                                                                                                                                                                               
       return { status: 'good', color: 'text-green-500', bgColor: 'bg-green-100' };
     }
   }, [performanceMetrics, fpsAverage]);
@@ -687,8 +692,12 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
       </motion.button>
 
       <motion.button
-        onClick={onSidebarToggle}
-        className="flex items-center justify-center space-x-2 py-2 px-4 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors shadow-md hover:shadow-lg"
+        onClick={onAnalyticsToggle}
+        className={`flex items-center cursor-pointer justify-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+          analyticsPanelOpen
+            ? 'bg-purple-600 text-white hover:bg-purple-700'
+            : 'bg-purple-500 text-white hover:bg-purple-600'
+        } shadow-md hover:shadow-lg`}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -775,8 +784,13 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
                 <h3 className="font-bold text-gray-900">Map Controls</h3>
               </div>
               <motion.button
-                onClick={() => setIsExpanded(false)}
-                className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() => {
+                  setIsExpanded(false);
+                  if (analyticsPanelOpen && onAnalyticsClose) {
+                    onAnalyticsClose();
+                  }
+                }}
+                className="p-1 cursor-pointer rounded-lg hover:bg-gray-100 transition-colors"
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 transition={{ duration: 0.2 }}
@@ -977,7 +991,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
       ) : (
         <motion.button
           onClick={() => setIsExpanded(true)}
-          className="bg-white/95 backdrop-blur-md shadow-[2px] border border-white/30 rounded-[5px] p-1 hover:bg-white/100 transition-all duration-200"
+          className="bg-white/95 cursor-pointer backdrop-blur-md shadow-[2px] border border-white/30 rounded-[5px] p-1 hover:bg-white/100 transition-all duration-200"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -1001,12 +1015,13 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
           <motion.div
             whileHover={{ rotate: 45 }}
             animate={isExpanded ? { scale: [1, 1.2, 1] } : {}}
+            className='cursor-pointer'
             transition={{
               duration: 0.2,
               scale: isExpanded ? { duration: 0.4, delay: 0.2 } : undefined
             }}
           >
-            <MdSettings className="w-5 h-5 text-gray-600" />
+            <MdSettings className="w-5 cursor-pointer h-5 text-gray-600" />
           </motion.div>
         </motion.button>
       )}

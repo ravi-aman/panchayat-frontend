@@ -4,32 +4,21 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { 
-  FiMenu,
-  FiX,
-  FiLayers,
-  FiMapPin,
-  FiTrendingUp,
-  FiAlertTriangle,
-  FiRefreshCw,
-  FiMaximize2,
-  FiShare2,
-  FiDownload,
-  FiFilter,
-  FiSearch,
+ 
   FiChevronUp,
-  FiChevronDown
+  FiChevronDown,
+  FiTrendingUp,
+  FiRefreshCw
 } from 'react-icons/fi';
 import { 
   IoStatsChart,
   IoLocationSharp,
-  IoTime,
   IoWarning,
   IoLayersSharp
 } from 'react-icons/io5';
 
 import MapLibreMap from './MapLibreMap';
-import { HeatmapControls } from './HeatmapControls';
-import { HeatmapLegend } from './HeatmapLegend';
+
 import { RegionBounds, HeatmapDataPoint, HeatmapCluster, HeatmapAnomaly } from '../../types/heatmap';
 
 // Category icons for mobile display
@@ -175,11 +164,11 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [bottomSheetHeight, setBottomSheetHeight] = useState(120); // Initial collapsed height
   const [activeTab, setActiveTab] = useState<'stats' | 'layers' | 'details'>('stats');
-  const [searchFocused, setSearchFocused] = useState(false);
+//   const [searchFocused, setSearchFocused] = useState(false);
   
   // Touch handling refs
   const bottomSheetRef = useRef<HTMLDivElement>(null);
-  const startY = useRef(0);
+//   const startY = useRef(0);
   const currentHeight = useRef(bottomSheetHeight);
 
   // Mobile viewport calculations
@@ -218,27 +207,27 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
   }, [categoryStats]);
 
   // Handle bottom sheet drag
-  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent, info: PanInfo) => {
-    const { offset, velocity } = info;
-    
-    let newHeight = currentHeight.current - offset.y;
-    
-    // Add velocity for momentum
-    if (velocity.y < -100) {
-      newHeight = maxHeight;
-    } else if (velocity.y > 100) {
-      newHeight = minHeight;
-    }
-    
-    // Constrain to bounds
-    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-    
-    setBottomSheetHeight(newHeight);
-    currentHeight.current = newHeight;
-    
-    // Update open state based on height
-    setBottomSheetOpen(newHeight > minHeight + 50);
-  }, [maxHeight, minHeight]);
+const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const { offset, velocity } = info;
+  
+  let newHeight = currentHeight.current - offset.y;
+  
+  // Add velocity for momentum
+  if (velocity.y < -100) {
+    newHeight = maxHeight;
+  } else if (velocity.y > 100) {
+    newHeight = minHeight;
+  }
+  
+  // Constrain to bounds
+  newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+  
+  setBottomSheetHeight(newHeight);
+  currentHeight.current = newHeight;
+  
+  // Update open state based on height
+  setBottomSheetOpen(newHeight > minHeight + 50);
+}, [maxHeight, minHeight]);
 
   // Quick action handlers
   const handleQuickRefresh = useCallback(() => {

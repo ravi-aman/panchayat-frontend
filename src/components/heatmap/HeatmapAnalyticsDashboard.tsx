@@ -5,7 +5,6 @@ import { RegionBounds, HeatmapDataPoint, HeatmapCluster } from '../../types/heat
 import { HeatmapVisualization } from './HeatmapVisualization';
 import { HeatmapControls } from './HeatmapControls';
 import { HeatmapSidebar } from './HeatmapSidebar';
-import { HeatmapLegend } from './HeatmapLegend';
 import { HeatmapTooltip } from './HeatmapTooltip';
 import { MobileHeatmapInterface } from './MobileHeatmapInterface';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
@@ -22,14 +21,7 @@ import {
   MdDelete,
   MdLightbulb,
   MdSecurity,
-  MdLocationOn,
-  MdLayers,
-  MdTrendingUp,
   MdAnalytics,
-  MdRefresh,
-  MdFilterList,
-  MdVisibility,
-  MdVisibilityOff,
   MdInfo,
   MdClose
 } from 'react-icons/md';
@@ -139,7 +131,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
   });
 
   // Mobile detection state
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile] = useState(false);
 
   // Advanced UI state management
   const [selectedPoint, setSelectedPoint] = useState<HeatmapDataPoint | null>(null);
@@ -157,19 +149,12 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
     historicalData: false
   });
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [analyticsPanelOpen, setAnalyticsPanelOpen] = useState<boolean>(false);
 
-  // Mobile detection effect
+  // Debug analytics panel state
   useEffect(() => {
-    const checkMobile = () => {
-      const width = window.innerWidth;
-      const isMobileDevice = width < 768; // md breakpoint in Tailwind
-      setIsMobile(isMobileDevice);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    console.log('Analytics panel state changed:', analyticsPanelOpen);
+  }, [analyticsPanelOpen]);
 
   // Use the advanced heatmap data hook with real-time capabilities
   const { state: heatmapState, isLoading, error, refetch } = useHeatmapData({
@@ -236,27 +221,6 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
     return 'green';
   }, [heatmapState?.data]);
 
-  // Zone color configuration
-  const zoneColors = {
-    red: { bg: 'bg-red-50', text: 'text-red-900', border: 'border-red-200', accent: 'bg-red-500' },
-    orange: { bg: 'bg-orange-50', text: 'text-orange-900', border: 'border-orange-200', accent: 'bg-orange-500' },
-    yellow: { bg: 'bg-yellow-50', text: 'text-yellow-900', border: 'border-yellow-200', accent: 'bg-yellow-500' },
-    green: { bg: 'bg-green-50', text: 'text-green-900', border: 'border-green-200', accent: 'bg-green-500' }
-  };
-
-  // Category statistics
-  const categoryStats = useMemo(() => {
-    if (!heatmapState?.data?.dataPoints) return {};
-    
-    const stats: Record<string, number> = {};
-    heatmapState.data.dataPoints.forEach(point => {
-      const category = point.metadata?.category || 'other';
-      stats[category] = (stats[category] || 0) + 1;
-    });
-    
-    return stats;
-  }, [heatmapState?.data]);
-
   // Handle point selection with detailed information
   const handlePointClick = useCallback((point: HeatmapDataPoint) => {
     setSelectedPoint(point);
@@ -272,6 +236,16 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
   // Handle layer toggle
   const handleToggleLayer = useCallback((layerId: string) => {
     setLayerVisibility(prev => ({ ...prev, [layerId]: !prev[layerId as keyof typeof prev] }));
+  }, []);
+
+  // Handle analytics panel toggle
+  const handleAnalyticsToggle = useCallback(() => {
+    setAnalyticsPanelOpen(prev => !prev);
+  }, []);
+
+  // Handle analytics panel close
+  const handleAnalyticsClose = useCallback(() => {
+    setAnalyticsPanelOpen(false);
   }, []);
 
   // Calculate analytics for mobile interface
@@ -396,6 +370,9 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
               onExport={(format) => console.log('Export format:', format)}
               onFilterChange={(filters) => console.log('Filters changed:', filters)}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+              analyticsPanelOpen={analyticsPanelOpen}
+              onAnalyticsToggle={handleAnalyticsToggle}
+              onAnalyticsClose={handleAnalyticsClose}
               className="absolute top-4 right-4 z-40"
             />
 
@@ -559,201 +536,145 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
           </div>
         )}
 
-        {/* ===== ADVANCED STATS DASHBOARD ===== */}
-        <motion.div 
-          className="absolute top-24 right-95 z-5"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className={`${zoneColors[calculateRiskZone].bg} ${zoneColors[calculateRiskZone].border} backdrop-blur-md rounded-xl shadow-xl border p-4 min-w-80`}>
-            
-            {/* Header with live indicator */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <motion.div 
-                  className={`w-3 h-3 ${zoneColors[calculateRiskZone].accent} rounded-full`}
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1]
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                <span className={`text-sm font-semibold ${zoneColors[calculateRiskZone].text}`}>
-                  Live Dashboard
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className={`text-xs ${zoneColors[calculateRiskZone].text} opacity-70`}>
-                  {calculateRiskZone.charAt(0).toUpperCase() + calculateRiskZone.slice(1)} Zone
-                </span>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => refetch()}
-                  className={`p-1 rounded-lg hover:bg-white/20 ${zoneColors[calculateRiskZone].text}`}
-                >
-                  <MdRefresh className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </div>
-            
-            {/* Real-time Connection Status */}
-            <div className="flex items-center justify-between mb-3 p-2 bg-white/30 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  wsStatus === 'connected' ? 'bg-green-400' :
-                  wsStatus === 'connecting' || wsStatus === 'reconnecting' ? 'bg-yellow-400' :
-                  'bg-red-400'
-                }`} />
-                <span className="text-xs font-medium text-gray-700">
-                  {wsStatus === 'connected' ? 'Connected' :
-                   wsStatus === 'connecting' ? 'Connecting' :
-                   wsStatus === 'reconnecting' ? 'Reconnecting' :
-                   'Disconnected'}
-                </span>
-              </div>
-              {isWsConnected && (
-                <span className="text-xs text-gray-500">
-                  Real-time updates active
-                </span>
-              )}
-            </div>
-
-            {/* Core Metrics Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              
-              {/* Total Issues */}
-              <motion.div 
-                className="bg-white/40 p-3 rounded-lg"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center space-x-2 mb-1">
-                  <MdLocationOn className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs font-medium text-gray-700">Total Issues</span>
-                </div>
-                <div className="text-xl font-bold text-blue-900">
-                  {heatmapState?.data?.dataPoints?.length || 0}
-                </div>
-                <div className="text-xs text-gray-600">Active reports</div>
-              </motion.div>
-
-              {/* Active Clusters */}
-              <motion.div 
-                className="bg-white/40 p-3 rounded-lg"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center space-x-2 mb-1">
-                  <MdAnalytics className="w-4 h-4 text-orange-600" />
-                  <span className="text-xs font-medium text-gray-700">Clusters</span>
-                </div>
-                <div className="text-xl font-bold text-orange-900">
-                  {heatmapState?.data?.clusters?.length || 0}
-                </div>
-                <div className="text-xs text-gray-600">Hot spots</div>
-              </motion.div>
-
-              {/* Critical Issues */}
-              <motion.div 
-                className="bg-white/40 p-3 rounded-lg"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center space-x-2 mb-1">
-                  <MdWarning className="w-4 h-4 text-red-600" />
-                  <span className="text-xs font-medium text-gray-700">Critical</span>
-                </div>
-                <div className="text-xl font-bold text-red-900">
-                  {heatmapState?.data?.dataPoints?.filter(p => 
-                    p.metadata?.urgency === 'critical' || p.metadata?.urgency === 'emergency'
-                  ).length || 0}
-                </div>
-                <div className="text-xs text-gray-600">Urgent issues</div>
-              </motion.div>
-
-              {/* Anomalies */}
-              <motion.div 
-                className="bg-white/40 p-3 rounded-lg"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center space-x-2 mb-1">
-                  <MdTrendingUp className="w-4 h-4 text-purple-600" />
-                  <span className="text-xs font-medium text-gray-700">Anomalies</span>
-                </div>
-                <div className="text-xl font-bold text-purple-900">
-                  {heatmapState?.data?.anomalies?.length || 0}
-                </div>
-                <div className="text-xs text-gray-600">Unusual patterns</div>
-              </motion.div>
-            </div>
-
-            {/* Category Breakdown */}
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-                <MdFilterList className="w-4 h-4 mr-2" />
-                Issue Categories
-              </h4>
-              <div className="space-y-2">
-                {Object.entries(categoryStats).map(([category, count]) => {
-                  const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.other;
-                  const IconComponent = config.icon;
-                  
-                  return (
-                    <motion.div 
-                      key={category}
-                      className="flex items-center justify-between p-2 bg-white/30 rounded-lg hover:bg-white/40 cursor-pointer"
-                      whileHover={{ scale: 1.02 }}
-                      onClick={() => console.log('Selected category:', category)}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <div className={`p-1 rounded ${config.bgColor}`}>
-                          <IconComponent className="w-3 h-3" style={{ color: config.color }} />
-                        </div>
-                        <span className="text-xs font-medium text-gray-700 capitalize">
-                          {config.label}
-                        </span>
-                      </div>
-                      <span className="text-sm font-bold text-gray-900">{count as number}</span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Layer Controls */}
-            <div className="border-t border-white/20 pt-3">
-              <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-                <MdLayers className="w-4 h-4 mr-2" />
-                Map Layers
-              </h4>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(layerVisibility).map(([layer, visible]) => (
+        {/* ===== ANALYTICS DASHBOARD PANEL ===== */}
+        <AnimatePresence>
+          {analyticsPanelOpen && (
+            <motion.div
+              className="absolute top-0 left-0 h-full w-96 bg-white/95 backdrop-blur-md shadow-2xl border-r border-white/30 z-50 overflow-y-auto"
+              initial={{ x: -400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -400, opacity: 0 }}
+              transition={{
+                type: "spring",
+                damping: 30,
+                stiffness: 300,
+                opacity: { duration: 0.2 }
+              }}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <MdAnalytics className="w-6 h-6 text-purple-600" />
+                    <h2 className="text-xl font-bold text-gray-900">Analytics Dashboard</h2>
+                  </div>
                   <motion.button
-                    key={layer}
-                    onClick={() => setLayerVisibility(prev => ({ ...prev, [layer]: !visible }))}
-                    className={`flex items-center space-x-2 p-2 rounded-lg text-xs font-medium transition-colors ${
-                      visible 
-                        ? 'bg-blue-100 text-blue-800 border border-blue-200' 
-                        : 'bg-white/30 text-gray-700 hover:bg-white/40'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    onClick={handleAnalyticsClose}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    {visible ? <MdVisibility className="w-3 h-3" /> : <MdVisibilityOff className="w-3 h-3" />}
-                    <span className="capitalize">{layer}</span>
+                    <MdClose className="w-5 h-5 text-gray-600" />
                   </motion.button>
-                ))}
+                </div>
+
+                {/* Analytics Content */}
+                <div className="space-y-6">
+                  {/* Key Metrics */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <motion.div
+                      className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <div className="text-sm text-blue-600 font-medium">Total Issues</div>
+                      <div className="text-2xl font-bold text-blue-900">
+                        {heatmapState?.data?.dataPoints?.length || 0}
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl border border-red-200"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <div className="text-sm text-red-600 font-medium">Critical Issues</div>
+                      <div className="text-2xl font-bold text-red-900">
+                        {heatmapState?.data?.dataPoints?.filter(p =>
+                          p.metadata?.urgency === 'critical' || p.metadata?.urgency === 'emergency'
+                        ).length || 0}
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  {/* Performance Metrics */}
+                  <motion.div
+                    className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div className="text-sm text-green-600 font-medium mb-2">Performance Status</div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-green-800 font-medium">Real-time Active</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Category Breakdown */}
+                  <motion.div
+                    className="bg-white p-4 rounded-xl border border-gray-200"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <div className="text-sm text-gray-600 font-medium mb-3">Issue Categories</div>
+                    <div className="space-y-2">
+                      {Object.entries(CATEGORY_CONFIG).slice(0, 5).map(([category, config], index) => {
+                        const count = heatmapState?.data?.dataPoints?.filter(p =>
+                          p.metadata?.category === category
+                        ).length || 0;
+
+                        return (
+                          <motion.div
+                            key={category}
+                            className="flex items-center justify-between py-2"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 + index * 0.1 }}
+                          >
+                            <div className="flex items-center space-x-2">
+                              {React.createElement(config.icon, { className: "w-4 h-4", style: { color: config.color } })}
+                              <span className="text-sm text-gray-700 capitalize">{config.label}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">{count}</span>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+
+                  {/* Action Buttons */}
+                  <motion.div
+                    className="space-y-3"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <motion.button
+                      onClick={refetch}
+                      className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Refresh Data
+                    </motion.button>
+
+                    <motion.button
+                      onClick={() => console.log('Export analytics')}
+                      className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-600 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Export Report
+                    </motion.button>
+                  </motion.div>
+                </div>
               </div>
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ===== ADVANCED SIDEBAR ===== */}
         <AnimatePresence>
