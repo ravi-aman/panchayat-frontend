@@ -301,7 +301,7 @@ export class HeatmapErrorBoundary extends Component<HeatmapErrorBoundaryProps, E
       const canRetry = enableRetry && retryCount < maxRetries;
 
       return (
-        <div className={`heatmap-error-boundary min-h-screen bg-gray-50 flex items-center justify-center p-4 ${className}`}>
+        <div className={`heatmap-error-boundary min-h-screen bg-gray-50 flex items-center justify-center p-2 ${className}`}>
           <motion.div
             className="max-w-2xl w-full bg-white rounded-lg shadow-xl overflow-hidden"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -326,7 +326,20 @@ export class HeatmapErrorBoundary extends Component<HeatmapErrorBoundaryProps, E
 
             {/* Content */}
             <div className="p-6">
-              
+               {/* Quick Actions - Retry Button */}
+              {canRetry && (
+                <div className="mb-6">
+                  <motion.button
+                    onClick={this.handleRetry}
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <MdRefresh className="w-4 h-4" />
+                    <span>Try Again ({maxRetries - retryCount} left)</span>
+                  </motion.button>
+                </div>
+              )}
               {/* Error Summary */}
               <div className="mb-6">
                 <div className="flex items-center space-x-2 mb-3">
@@ -383,19 +396,6 @@ export class HeatmapErrorBoundary extends Component<HeatmapErrorBoundaryProps, E
               {/* Actions */}
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 
-                {/* Retry Button */}
-                {canRetry && (
-                  <motion.button
-                    onClick={this.handleRetry}
-                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <MdRefresh className="w-4 h-4" />
-                    <span>Try Again ({maxRetries - retryCount} left)</span>
-                  </motion.button>
-                )}
-
                 {/* Demo Mode Button */}
                 {enableDemoMode && (
                   <motion.button
