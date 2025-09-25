@@ -238,49 +238,62 @@ export class AdvancedHeatmapApiService {
 
   private generateMockHeatmapData(bounds: RegionBounds): HeatmapApiResponse {
     // Generate demo data - reduced for performance
-    const mockPoints = Array.from({ length: 100 }, (_, i) => ({
-      _id: `demo-point-${i}`,
-      h3Index: `8c2a1072b5fffff${i.toString().padStart(2, '0')}`,
-      location: {
-        coordinates: [
-          -122.4594 + (Math.random() * 0.04), // lng
-          37.7349 + (Math.random() * 0.04)    // lat
-        ] as [number, number],
-        type: 'Point' as const,
-        address: `Demo Address ${i + 1}, San Francisco, CA`,
-        landmark: i % 5 === 0 ? `Demo Landmark ${Math.floor(i/5) + 1}` : undefined,
-        hierarchy: {
-          resolution3: `83754e57fffffff`,
-          resolution6: `862a1072fffffff`,
-          resolution8: `882a1072b5fffff`,
-          resolution10: `8a2a1072b52ffff`,
-          resolution12: `8c2a1072b5245ff`
+    const mockPoints = Array.from({ length: 100 }, (_, i) => {
+      const coords: [number, number] = [
+        -122.4594 + (Math.random() * 0.04), // lng
+        37.7349 + (Math.random() * 0.04)    // lat
+      ];
+      return {
+        coordinates: coords,
+        _id: `demo-point-${i}`,
+        h3Index: `8c2a1072b5fffff${i.toString().padStart(2, '0')}`,
+        location: {
+          coordinates: coords,
+          type: 'Point' as const,
+          address: `Demo Address ${i + 1}, San Francisco, CA`,
+          landmark: i % 5 === 0 ? `Demo Landmark ${Math.floor(i/5) + 1}` : undefined,
+          hierarchy: {
+            resolution3: `83754e57fffffff`,
+            resolution6: `862a1072fffffff`,
+            resolution8: `882a1072b5fffff`,
+            resolution10: `8a2a1072b52ffff`,
+            resolution12: `8c2a1072b5245ff`
+          }
+        },
+        value: Math.random() * 100,
+        intensity: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
+        weight: Math.random() * 10,
+        velocity: Math.random() * 5,
+        acceleration: Math.random() * 2,
+        momentum: Math.random() * 8,
+        riskScore: Math.random() * 100,
+        freshnessScore: Math.random() * 100,
+        metadata: {
+          id: `demo-point-${i}`,
+          views: Math.floor(Math.random() * 100),
+          votes: Math.floor(Math.random() * 50),
+          reporter: { name: `User ${i + 1}`, id: `user-${i + 1}` },
+          images: false,
+          upvotes: Math.floor(Math.random() * 20),
+          comments: Math.floor(Math.random() * 10),
+          address: `Demo Address ${i + 1}, San Francisco, CA`,
+          description: `Demo issue description ${i + 1}`,
+          issueType: ['traffic', 'flooding', 'electricity', 'water', 'waste'][Math.floor(Math.random() * 5)],
+          priority: Math.floor(Math.random() * 5) + 1,
+          timestamp: new Date(Date.now() - Math.random() * 86400000),
+          status: ['reported', 'verified', 'in_progress', 'resolved'][Math.floor(Math.random() * 4)] as any,
+          reportCount: Math.floor(Math.random() * 20) + 1,
+          severity: Math.floor(Math.random() * 5) + 1,
+          category: ['traffic', 'flooding', 'electricity', 'water', 'waste'][Math.floor(Math.random() * 5)] as any,
+          urgency: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
+          tags: [`tag${Math.floor(Math.random() * 10)}`, `category${Math.floor(Math.random() * 5)}`],
+          verificationCount: Math.floor(Math.random() * 10),
+          engagementScore: Math.random() * 100,
+          qualityScore: Math.random() * 100,
+          actionabilityScore: Math.random() * 100
         }
-      },
-      value: Math.random() * 100,
-      intensity: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
-      weight: Math.random() * 10,
-      velocity: Math.random() * 5,
-      acceleration: Math.random() * 2,
-      momentum: Math.random() * 8,
-      riskScore: Math.random() * 100,
-      freshnessScore: Math.random() * 100,
-      metadata: {
-        issueType: ['traffic', 'flooding', 'electricity', 'water', 'waste'][Math.floor(Math.random() * 5)],
-        priority: Math.floor(Math.random() * 5) + 1,
-        timestamp: new Date(Date.now() - Math.random() * 86400000),
-        status: ['reported', 'verified', 'in_progress', 'resolved'][Math.floor(Math.random() * 4)] as any,
-        reportCount: Math.floor(Math.random() * 20) + 1,
-        severity: Math.floor(Math.random() * 5) + 1,
-        category: ['traffic', 'flooding', 'electricity', 'water', 'waste'][Math.floor(Math.random() * 5)] as any,
-        urgency: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
-        tags: [`tag${Math.floor(Math.random() * 10)}`, `category${Math.floor(Math.random() * 5)}`],
-        verificationCount: Math.floor(Math.random() * 10),
-        engagementScore: Math.random() * 100,
-        qualityScore: Math.random() * 100,
-        actionabilityScore: Math.random() * 100
-      }
-    }));
+      };
+    });
 
     return {
       success: true,

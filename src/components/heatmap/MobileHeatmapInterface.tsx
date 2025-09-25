@@ -207,7 +207,7 @@ export const MobileHeatmapInterface: React.FC<MobileHeatmapInterfaceProps> = ({
   }, [categoryStats]);
 
   // Handle bottom sheet drag
-const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+const handleDragEnd = useCallback((_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
   const { offset, velocity } = info;
   
   let newHeight = currentHeight.current - offset.y;

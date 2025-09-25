@@ -682,8 +682,8 @@ export const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = React.m
           </Suspense>
 
           {/* Mobile Search Overlay */}
-          <div className="absolute top-5 left-4 right-4 md:hidden z-50">
-            <div className="bg-white rounded-full shadow-lg">
+          <div className="absolute w-[85%] top-4 left-4 right-4 md:hidden z-50">
+            <div className="bg-white rounded-full ">
               {mapInstance && mapReady ? (
                 <SearchAndNavigate
                   map={mapInstance}

@@ -33,7 +33,7 @@ export default function MobileNavbar() {
       style={{ height: 56, zIndex: 9999 }}
     >
       <a href="/">
-        <img src="/logo.png" alt="Neecop Logo" className="h-7 w-auto" />
+        <img src="/assets/logo1.png" alt="Panchayat" className="h-14 w-auto" />
       </a>
 
       <div className="flex items-center space-x-3">

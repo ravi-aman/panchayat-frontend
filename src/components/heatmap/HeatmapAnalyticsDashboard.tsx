@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapProvider } from '../../contexts/MapContext';
 import { RegionBounds, HeatmapDataPoint, HeatmapCluster } from '../../types/heatmap';
 import { HeatmapVisualization } from './HeatmapVisualization';
 import { HeatmapControls } from './HeatmapControls';
@@ -10,6 +9,7 @@ import { MobileHeatmapInterface } from './MobileHeatmapInterface';
 import { useHeatmapData } from '../../hooks/useHeatmapData';
 import { useHeatmapWebSocket } from '../../hooks/useHeatmapWebSocket';
 import SearchAndNavigate from '../common/SearchAndNavigate';
+import { useMap } from '../../contexts/MapContext';
 
 // React Icons for category-specific markers
 import {
@@ -124,6 +124,9 @@ interface AdvancedHeatmapDashboardProps {
 export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> = ({
   className = ''
 }) => {
+  // Get map instance from context
+  const { mapInstance } = useMap();
+
   // Advanced map and region state with advanced settings
   const [bounds, setBounds] = useState<RegionBounds>({
     southwest: [77.0, 12.8],  // Bangalore bounds (more focused)
@@ -261,28 +264,28 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
   // Render the advanced dashboard with comprehensive UI
   return (
     // <HeatmapErrorBoundary>
-      <MapProvider>
-        {/* Mobile Interface for smaller screens */}
-        {isMobile ? (
-          <MobileHeatmapInterface
-            bounds={bounds}
-            data={heatmapState?.data || {}}
-            analytics={analytics}
-            selectedPoint={selectedPoint}
-            selectedCluster={selectedCluster}
-            selectedAnomaly={null}
-            layerVisibility={layerVisibility}
-            onToggleLayer={handleToggleLayer}
-            isLoading={isLoading}
-            onRefresh={refetch}
-            onBoundsChange={handleBoundsChange}
-            onPointClick={handlePointClick}
-            onClusterClick={handleClusterClick}
-            className={className}
-          />
-        ) : (
-          /* Desktop Interface for larger screens */
-          <div className={`advanced-heatmap-dashboard w-full h-full ${className} relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100`}>
+    <>
+      {/* Mobile Interface for smaller screens */}
+      {isMobile ? (
+        <MobileHeatmapInterface
+          bounds={bounds}
+          data={heatmapState?.data || {}}
+          analytics={analytics}
+          selectedPoint={selectedPoint}
+          selectedCluster={selectedCluster}
+          selectedAnomaly={null}
+          layerVisibility={layerVisibility}
+          onToggleLayer={handleToggleLayer}
+          isLoading={isLoading}
+          onRefresh={refetch}
+          onBoundsChange={handleBoundsChange}
+          onPointClick={handlePointClick}
+          onClusterClick={handleClusterClick}
+          className={className}
+        />
+      ) : (
+        /* Desktop Interface for larger screens */
+        <div className={`advanced-heatmap-dashboard w-full h-full ${className} relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100`}>
             
             {/* ===== MAIN MAP CONTAINER ===== */}
             <div className="absolute inset-0 w-full h-full">
@@ -377,7 +380,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             />
 
             {/* ===== DESKTOP SEARCH BAR ===== */}
-            <motion.div 
+            {/* <motion.div 
               className="absolute top-4 left-4 z-50"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -385,7 +388,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
             >
               <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/20 p-2">
                 <SearchAndNavigate 
-                  map={null} // Will be connected when map is ready
+                  map={mapInstance}
                   placeholder="Search locations, civic issues..." 
                   className="w-80"
                   onLocationSelect={(location) => {
@@ -400,7 +403,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
                   }}
                 />
               </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* ===== HEATMAP LEGEND ===== */}
             {/* <HeatmapLegend
@@ -816,7 +819,7 @@ export const AdvancedHeatmapDashboard: React.FC<AdvancedHeatmapDashboardProps> =
           )}
         </AnimatePresence>
 
-    </MapProvider>
+    </>
     // </HeatmapErrorBoundary>
   );
 };

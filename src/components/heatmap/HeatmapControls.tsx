@@ -729,7 +729,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
       {isExpanded ? (
         <motion.div
           ref={controlsRef}
-          className={`heatmap-controls bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${className}`}
+          className={`heatmap-controls bg-white/95 backdrop-blur-md shadow-2xl border border-white/30 rounded-2xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 md:h-[83vh] h-[65vh] absolute top-[9rem] right-[9px] md:top-[10px] md:right-[3rem] z-10 ${className}`}
           initial={{
             opacity: 0,
             scale: 0.1,
@@ -767,12 +767,12 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
             }
           }}
           style={{
-            position: 'absolute',
-            top: '1xl',
-            right: '3rem',
+            // position: 'absolute',
+            // top: '1xl',
+            // right: '3rem',
             width: isCompact ? '280px' : '320px',
-            height: '83vh',
-            zIndex: 40
+            // height: '83vh',
+            // zIndex: 40
           }}
         >
           <div className="p-4 max-h-full">
@@ -991,7 +991,7 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
       ) : (
         <motion.button
           onClick={() => setIsExpanded(true)}
-          className="bg-white/95 cursor-pointer backdrop-blur-md shadow-[2px] border border-white/30 rounded-[5px] p-1 hover:bg-white/100 transition-all duration-200"
+          className="bg-white/95 cursor-pointer backdrop-blur-md shadow-[2px] border border-white/30 rounded-[5px] p-1 hover:bg-white/100 transition-all duration-200 absolute top-[9rem] right-[9px] md:top-[10px] md:right-[3rem] z-10"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -1004,12 +1004,6 @@ export const HeatmapControls: React.FC<HeatmapControlsProps> = ({
             type: "spring",
             stiffness: 400,
             damping: 17
-          }}
-          style={{
-            position: 'absolute',
-            top: '10px',
-            right: '3rem',
-            zIndex: 40
           }}
         >
           <motion.div
