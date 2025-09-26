@@ -16,13 +16,13 @@ import api, { setLogoutFunction } from '../utils/api'; // Import the function to
 interface AuthContextState {
   user: User | null;
   accessToken: string | null;
-  registerUser: (user: User) => Promise<unknown>;
+  registerUser: (user: Partial<User>) => Promise<unknown>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   googleLogin: (credentialResponse: { credential: string }) => Promise<
     | {
         isNewUser: boolean;
-        user: User;
+        user: Partial<User>;
       }
     | undefined
   >;
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
 
-  const registerUser = async (user: User) => {
+  const registerUser = async (user: Partial<User>) => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/new`,

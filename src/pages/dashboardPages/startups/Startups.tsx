@@ -1207,7 +1207,7 @@ const Startups = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    Discover Startups
+                    Government Departments
                   </motion.h1>
                 </div>
                 <motion.p
@@ -1216,8 +1216,7 @@ const Startups = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  Explore innovative startups and groundbreaking ideas from visionary entrepreneurs
-                  around the world
+                  Discover and connect with essential government departments, their services, and local authorities
                 </motion.p>
 
                 {/* Stats */}
@@ -1264,7 +1263,7 @@ const Startups = () => {
                   <span>Refresh</span>
                 </motion.button>
 
-                <motion.button
+                {/* <motion.button
                   className="bg-[#1E5EFF] rounded-sm p-2 flex gap-1 text-white font-semibold px-3 transition-all duration-300 hover:bg-blue-700 active:scale-95 cursor-pointer"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1276,7 +1275,7 @@ const Startups = () => {
                 >
                   <h1 className="text">Create Startup</h1>
                   <Plus className="self-center w-5 h-5" />
-                </motion.button>
+                </motion.button> */}
               </motion.div>
             </div>
           </div>

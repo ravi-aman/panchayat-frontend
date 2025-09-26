@@ -190,11 +190,11 @@ const MediaEditorModal: React.FC<Props> = ({
         className="bg-white w-full h-[90vh] max-w-5xl rounded-2xl shadow-2xl border border-gray-100 overflow-auto scrollbar-hide"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#255df7]/5 to-purple-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
           <div className="flex items-center space-x-3">
-            {/* <div className="w-10 h-10 bg-gradient-to-br from-[#255df7] to-purple-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div> */}
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+              <ImageIcon className="w-5 h-5 text-gray-600" />
+            </div>
             <div>
               <h3 className="font-semibold text-gray-900">Media Editor</h3>
               <p className="text-sm text-gray-500">Organize and edit your media</p>
@@ -202,16 +202,16 @@ const MediaEditorModal: React.FC<Props> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
+            className="p-2 hover:bg-gray-50 rounded-lg transition-colors duration-200"
           >
-            <X className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+            <X className="w-5 h-5 text-gray-400 hover:text-gray-600" />
           </button>
         </div>
         <div className="p-6">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-[#255df7]/10 to-purple-100 rounded-2xl flex items-center justify-center mb-6">
-                <Upload className="w-12 h-12 text-[#255df7]" />
+              <div className="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center mb-6">
+                <Upload className="w-12 h-12 text-gray-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Your Media</h3>
               <p className="text-gray-500 text-center mb-8 max-w-md">
@@ -230,7 +230,7 @@ const MediaEditorModal: React.FC<Props> = ({
                 />
                 <label
                   htmlFor={`${uniqueId.current}-input`}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-[#255df7] to-[#1e4fd6] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#255df7]/25 transition-all duration-200 cursor-pointer transform hover:scale-105 active:scale-95"
+                  className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 cursor-pointer"
                 >
                   <ImageIcon className="w-5 h-5" />
                   <span>Choose Files</span>
@@ -279,8 +279,8 @@ const MediaEditorModal: React.FC<Props> = ({
                         onDrop={(e) => handleDrop(e, idx)}
                         className={`relative group cursor-pointer transition-all duration-200 ${
                           activeIndex === idx
-                            ? 'ring-3 ring-[#255df7] ring-offset-2 scale-105'
-                            : 'hover:scale-105 hover:shadow-lg'
+                            ? 'ring-2 ring-blue-500 ring-offset-2'
+                            : 'hover:shadow-md'
                         }`}
                       >
                         <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100">
@@ -351,9 +351,9 @@ const MediaEditorModal: React.FC<Props> = ({
                     />
                     <label
                       htmlFor={`${uniqueId.current}-input-2`}
-                      className="flex flex-col items-center justify-center w-24 h-24 rounded-xl border-2 border-dashed border-[#255df7]/30 text-[#255df7] cursor-pointer hover:bg-[#255df7]/5 transition-all duration-200 group"
+                      className="flex flex-col items-center justify-center w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 text-gray-600 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                     >
-                      <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                      <Plus className="w-6 h-6" />
                       <span className="text-xs font-medium mt-1">Add</span>
                     </label>
                   </div>
@@ -364,7 +364,7 @@ const MediaEditorModal: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+        <div className="mt-15 flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="text-sm text-gray-500">
             {items.length > 0 && `${items.length} file${items.length !== 1 ? 's' : ''} selected`}
           </div>
@@ -378,7 +378,7 @@ const MediaEditorModal: React.FC<Props> = ({
             <button
               onClick={handleNext}
               disabled={items.length === 0}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#255df7] to-[#1e4fd6] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#255df7]/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transform hover:scale-105 active:scale-95"
+              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Continue
             </button>

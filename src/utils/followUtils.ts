@@ -1,9 +1,65 @@
-import axios from 'axios';
+import api from './api';
+
+// Types for relationship check response
+export interface RelationshipData {
+  isFollowing: boolean;
+  isFollowedBy: boolean;
+  isMutual: boolean;
+}
+
+export interface TargetProfile {
+  profileId: string;
+  username: string;
+  followersCount: number;
+  followingCount: number;
+  bio?: string;
+}
+
+export interface Actions {
+  canFollow: boolean;
+  canUnfollow: boolean;
+  canMessage: boolean;
+}
+
+export interface RelationshipResponse {
+  status: string;
+  isFollowing: boolean;
+  followersCount: number;
+  followingCount: number;
+  relationship: RelationshipData;
+  targetProfile: TargetProfile;
+  actions: Actions;
+}
+
+// Utility function to check relationship between two profiles
+export const checkRelationship = async (
+  followerId: string,
+  targetId: string,
+): Promise<RelationshipResponse | null> => {
+  try {
+    const response = await api.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/social/profile/relationship`,
+      {
+        followerId,
+        targetId,
+      },
+    );
+
+    if (response.data.status === 'success') {
+      return response.data as RelationshipResponse;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error checking relationship:', error);
+    return null;
+  }
+};
 
 // Utility function to handle unfollowing a user
 export const unfollowUser = async (followerId: string, targetId: string): Promise<boolean> => {
   try {
-    await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/v1/social/profile/unfollow`, {
+    await api.post(`${import.meta.env.VITE_BACKEND_URL}/api/v1/social/profile/unfollow`, {
       followerId,
       targetId,
     });
@@ -17,7 +73,7 @@ export const unfollowUser = async (followerId: string, targetId: string): Promis
 // Utility function to handle following a user
 export const followUser = async (followerId: string, targetId: string): Promise<boolean> => {
   try {
-    await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/v1/social/profile/follow`, {
+    await api.post(`${import.meta.env.VITE_BACKEND_URL}/api/v1/social/profile/follow`, {
       followerId,
       targetId,
     });

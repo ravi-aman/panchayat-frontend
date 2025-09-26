@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Loader, Upload } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import GoogleAuthButton from '../../../components/auth/GoogleAuthBtn';
-import { User } from '../../../types/types';
+// import { User } from '../../../types/types';
 import { uploadFile, validateFile } from '../../../utils/fileUpload.utils';
 import { useToast } from '../../../contexts/toast/toastContext';
 
@@ -243,13 +243,13 @@ const Signup: React.FC = () => {
       email: formData.email,
       password: formData.password,
       photo: formData.photo,
-      gender: formData.gender.toLowerCase(),
+      gender: formData.gender.toLowerCase() as 'male' | 'female',
       dob: formData.dob,
       phone: formData.phone,
     };
 
     try {
-      await registerUser(data as User).then(() => {
+      await registerUser(data).then(() => {
         setSubmitMessage({
           type: 'success',
           message: 'Account created successfully! Redirecting to dashboard...',
@@ -460,7 +460,7 @@ const Signup: React.FC = () => {
                 Phone Number <span className="text-red-500">*</span>
               </label>
               <input
-                type="Number"
+                type="string"
                 name="phone"
                 placeholder="Enter Phone Number"
                 value={formData.phone}
@@ -650,25 +650,6 @@ const Signup: React.FC = () => {
                     className="sr-only"
                   />
                   <span>Female</span>
-                </label>
-
-                <label
-                  className={`flex items-center px-4 py-2 rounded-md cursor-pointer border transition-all
-                                    ${
-                                      formData.gender === 'others'
-                                        ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    }`}
-                >
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="others"
-                    checked={formData.gender === 'others'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <span>Others</span>
                 </label>
               </div>
               {touched.gender && errors.gender && (

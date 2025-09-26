@@ -58,9 +58,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, profileData }) => {
               </div>
             )}
             <p className="text-gray-700 whitespace-pre-line">{post.content}</p>
-            {post.image && (
+            {post.image && Array.isArray(post.image) && post.image.length > 0 && (
               <div className="mt-3">
-                <img src={post.image.url} alt="Post" className="w-full rounded-lg" />
+                <img src={post.image[0].url} alt="Post" className="w-full rounded-lg" />
               </div>
             )}
           </div>

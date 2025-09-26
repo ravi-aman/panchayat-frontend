@@ -5,16 +5,14 @@ import { useUnreadMessage } from '../../contexts/UnreadMessageContext';
 
 const menuItems = [
   { name: 'Dashboard', icon: '/dashboard/dashboard.png', href: '/dashboard/feed' },
-  { name: 'Funds', icon: '/dashboard/funds.png', href: '/dashboard/funds' },
-  { name: 'Startups', icon: '/dashboard/startup.png', href: '/dashboard/startups' },
-  { name: "MSME's", icon: '/dashboard/msme.png', href: '/dashboard/msme' },
+  { name: 'Heatmap', icon: '/dashboard/funds.png', href: '/dashboard/heatmap' },
+  { name: 'Gov Departments', icon: '/dashboard/startup.png', href: '/dashboard/startups' },
   {
     name: 'Government Policy',
     icon: '/dashboard/policy.png',
     href: '/dashboard/government_policies',
   },
   { name: 'Reports', icon: '/dashboard/reports.png', href: '/dashboard/reports' },
-  { name: 'Heatmap', icon: '/dashboard/dashboard.png', href: '/dashboard/heatmap' },
   { name: 'Connections', icon: '/dashboard/connection.png', href: '/dashboard/connections' },
   { name: 'Chat', icon: '/dashboard/inbox.png', href: '/dashboard/chat' },
 ];
@@ -115,8 +113,8 @@ const Sidebar: React.FC = () => {
       >
         <div className="absolute inset-0 bg-[url('/dashboard/cover.png')] bg-right bg-no-repeat bg-[length:60px] opacity-80" />
         <div className="relative z-10">
-          <h4 className="font-bold">Grow Business</h4>
-          <p className="mt-1 text-xs">Explore our marketing solutions</p>
+          <h4 className="font-bold">Heatmap</h4>
+          <p className="mt-1 text-xs">Explore our map solutions</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

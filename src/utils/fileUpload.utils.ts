@@ -77,6 +77,7 @@ function wait(ms: number) {
 async function uploadWithRetry(
   uploadUrl: string,
   file: File,
+  metadata: Record<string, string>,
   maxRetries = 3,
   onProgress?: (progress: number) => void,
   abortController?: AbortController,
@@ -88,6 +89,7 @@ async function uploadWithRetry(
       await uploadToPresignedURL(uploadUrl, file, {
         onProgress: (e) => onProgress?.(e.progress),
         abortController,
+        metadata,
       });
       return;
     } catch (error) {
@@ -108,12 +110,19 @@ function uploadToPresignedURL(
   options?: {
     onProgress?: (e: { progress: number }) => void;
     abortController?: AbortController;
+    metadata?: Record<string, string>;
   },
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', presignedUrl);
     xhr.setRequestHeader('Content-Type', file.type);
+
+    if (options?.metadata) {
+      for (const key in options.metadata) {
+        xhr.setRequestHeader(key, options.metadata[key]);
+      }
+    }
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable && options?.onProgress) {
@@ -256,6 +265,7 @@ export async function uploadFilesWithQueue(
         uploadWithRetry(
           uploadUrl,
           file,
+          metadata,
           maxRetries,
           (progress) => {
             // per-file progress reported
