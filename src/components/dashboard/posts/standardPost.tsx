@@ -1,19 +1,15 @@
 // LinkedInPost.tsx
 
 import React, { useState, useEffect } from 'react';
-import { FaHeart } from 'react-icons/fa6';
-import { FaCommentDots } from 'react-icons/fa6';
-import { FaArrowsRotate } from 'react-icons/fa6';
-import { FaLocationArrow } from 'react-icons/fa';
-import { FaCheck } from 'react-icons/fa6';
-import { FaPlus } from 'react-icons/fa6';
-import { MapPin } from 'lucide-react';
+
 import { IPost } from '../../../types/postTypes';
 import PostService from '../../../services/PostService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CommentSection } from '../comments';
 import { useNavigate } from 'react-router-dom';
 import { checkRelationship, followUser, unfollowUser } from '../../../utils/followUtils';
+import DynamicImageGrid from '../../common/DynamicImageGrid';
+import PostCard from '../../common/PostCard';
 
 // --- TYPE DEFINITIONS ---
 interface PostProps {
@@ -151,18 +147,6 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
   };
 
   // Format time ago (simple implementation)
-  const getTimeAgo = () => {
-    const now = new Date();
-    const postDate = new Date(post.createdAt);
-    const diffTime = Math.abs(now.getTime() - postDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return '1d';
-    if (diffDays < 7) return `${diffDays}d`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)}w`;
-    return `${Math.ceil(diffDays / 30)}m`;
-  };
-
   // Get liked users display names
   const getLikedByUsers = () => {
     if (!likesArray || likesArray.length === 0) {
@@ -274,199 +258,107 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm w-full max-w-full font-sans mb-4 overflow-hidden">
-      <div className="p-2 sm:p-3 md:p-4">
-        {/* Post Header */}
-        <div className="flex items-center mb-2 sm:mb-3 md:mb-4 gap-2 sm:gap-3">
-          <img
-            src={getAuthorImage()}
-            alt={getAuthorName()}
-            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex-shrink-0 cursor-pointer"
-            onClick={handleProfileClick}
-          />
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <p
-              className="font-bold text-gray-900 text-xs sm:text-sm md:text-base truncate cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={handleProfileClick}
-            >
-              {getAuthorName()}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-500 truncate">{post.author?.bio || ''}</p>
-            <p className="text-xs text-gray-500">{getTimeAgo()}</p>
-          </div>
-          {showFollowButton && post.author && (
-            <button
-              onClick={handleFollowToggle}
-              disabled={isFollowLoading}
-              className={`font-semibold text-xs sm:text-sm flex-shrink-0 transition-colors px-2 sm:px-3 py-1 text-center ${
-                isFollowLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              } ${
-                isFollowing
-                  ? 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
-              }`}
-            >
-              {isFollowLoading ? (
-                '...'
-              ) : isFollowing ? (
-                <span className="flex items-center justify-center gap-1">
-                  <FaCheck className="inline w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Following</span>
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-1">
-                  <FaPlus className="inline w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Follow</span>
-                </span>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Post Body */}
-        <div className="mb-2 w-full overflow-hidden">
-          <p className="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words w-full">
-            {displayText}
-            {shouldTruncate && !isExpanded && (
-              <button
-                onClick={() => setIsExpanded(true)}
-                className="text-blue-600 hover:text-blue-800 ml-1 font-medium text-sm sm:text-base transition-colors"
-              >
-                ...more
-              </button>
-            )}
-            {shouldTruncate && isExpanded && (
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="text-blue-600 hover:text-blue-800 ml-2 font-medium text-sm sm:text-base transition-colors"
-              >
-                Show less
-              </button>
-            )}
-          </p>
-        </div>
-
-        {/* Location Display */}
-        {post.location && (
-          <div className="mb-3 flex items-center gap-2 text-gray-600">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-sm">
-              {('name' in post.location && post.location.name) || 
+    <PostCard className="mb-6" showShadow={true} animateOnHover={true}>
+      {/* Post Header */}
+      <PostCard.Header
+        author={{
+          name: getAuthorName(),
+          username: post.author?.username || 'unknown',
+          avatar: getAuthorImage(),
+          verified: post.author?.type === 'company',
+          bio: post.author?.bio || '',
+        }}
+        timestamp={post.createdAt}
+        location={post.location ? {
+          name: ('name' in post.location && post.location.name) || 
                post.location.address || 
                post.location.country || 
-               'Unknown Location'}
-            </span>
-          </div>
-        )}
-      </div>
+               'Unknown Location',
+          coordinates: post.location.coordinates
+        } : undefined}
+        isFollowing={isFollowing}
+        onFollow={handleFollowToggle}
+        onProfileClick={handleProfileClick}
+        showFollowButton={showFollowButton && !!post.author}
+      />
 
-      {/* Image Grid */}
-      {post.image && post.image.length > 0 && (
-        <div
-          className={`grid gap-0.5 sm:gap-1 ${
-            post.image.length > 1 ? 'grid-cols-2' : 'grid-cols-1'
-          } ${post.image.length === 3 ? 'grid-rows-2' : ''}`}
-        >
-          {post.image.map((img, index) => (
-            <div
-              key={index}
-              className={`${
-                post.image!.length === 3 && index === 0 ? 'col-span-2' : ''
-              } overflow-hidden bg-gray-100`}
+      {/* Post Content */}
+      <PostCard.Content>
+        <p className="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
+          {displayText}
+          {shouldTruncate && !isExpanded && (
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="text-blue-600 hover:text-blue-800 ml-1 font-medium transition-colors"
             >
-              <img
-                src={img.url}
-                alt={img.alt || `Post content ${index + 1}`}
-                className="w-full h-32 sm:h-40 md:h-48 lg:h-52 object-cover transition-transform hover:scale-105"
-              />
-            </div>
-          ))}
-        </div>
+              ...more
+            </button>
+          )}
+          {shouldTruncate && isExpanded && (
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="text-blue-600 hover:text-blue-800 ml-2 font-medium transition-colors"
+            >
+              Show less
+            </button>
+          )}
+        </p>
+      </PostCard.Content>
+
+      {/* Dynamic Image Grid */}
+      {post.image && post.image.length > 0 && (
+        <DynamicImageGrid
+          images={post.image.map(img => ({
+            url: img.url,
+            alt: img.alt || `Post image`,
+            filename: img.filename,
+            width: 1200,
+            height: 800
+          }))}
+          className=""
+          showHoverEffects={true}
+          maxHeight="500px"
+          borderRadius="0px"
+        />
       )}
 
-      <div className="p-3 sm:p-4">
-        {/* Engagement Stats */}
-        <div className="flex justify-between items-center text-xs sm:text-sm text-gray-500 mb-2">
-          <div className="flex items-center gap-1 min-w-0 flex-1">
-            {(() => {
-              const likedUsers = getLikedByUsers();
-              if (likedUsers.length === 0) return <span></span>;
+      {/* Engagement Stats */}
+      <PostCard.Engagement
+        likes={likesCount}
+        comments={commentsCount}
+        shares={post.sharesCount || 0}
+        views={post.viewsCount}
+        isLiked={isLiked}
+        isBookmarked={false}
+        onLike={handleLikeToggle}
+        onComment={() => setShowComments(!showComments)}
+        onShare={() => {}}
+        onBookmark={() => {}}
+        likedBy={getLikedByUsers()}
+      />
 
-              let displayText = '';
-              if (likedUsers.length === 1) {
-                displayText = likedUsers[0];
-              } else if (likedUsers.length === 2) {
-                displayText = `${likedUsers[0]} and ${likedUsers[1]}`;
-              } else {
-                // Calculate remaining others (total likes minus displayed users)
-                const remainingCount = Math.max(0, likesCount - 2);
-                if (remainingCount > 0) {
-                  displayText = `${likedUsers[0]} and ${remainingCount} others`;
-                } else {
-                  displayText = likedUsers[0];
-                }
-              }
+      {/* Post Actions */}
+      <PostCard.Actions
+        isLiked={isLiked}
+        isBookmarked={false}
+        onLike={handleLikeToggle}
+        onComment={() => setShowComments(!showComments)}
+        onShare={handleShare}
+        onBookmark={() => {}}
+        disabled={isLiking || isSharing}
+      />
 
-              return (
-                <span className="flex items-center gap-1 truncate">
-                  <FaHeart className="text-red-500 w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                  <span className="truncate">{displayText}</span>
-                </span>
-              );
-            })()}
-          </div>
-          <span className="flex-shrink-0 ml-2">{likesCount} likes</span>
-          <span className="flex-shrink-0 ml-2">•</span>
-          <span className="flex-shrink-0 ml-2">{post.sharesCount} reposts</span>
-          <span className="flex-shrink-0 ml-2">•</span>
-          <span className="flex-shrink-0 ml-2">{commentsCount} comments</span>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="border-t border-gray-200 pt-2 flex justify-around">
-          <button
-            onClick={handleLikeToggle}
-            disabled={isLiking}
-            className={`flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 rounded-md w-full justify-center text-xs sm:text-sm transition-colors ${
-              isLiked ? 'text-red-500 hover:bg-red-50' : 'text-gray-600 hover:bg-gray-100'
-            } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <FaHeart className={`w-3 h-3 sm:w-4 sm:h-4 ${isLiked ? 'text-red-500' : ''}`} />{' '}
-            <span className="hidden sm:inline">{isLiked ? 'Liked' : 'Like'}</span>
-          </button>
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:bg-gray-100 p-1 sm:p-2 rounded-md w-full justify-center text-xs sm:text-sm"
-          >
-            <FaCommentDots className="w-3 h-3 sm:w-4 sm:h-4" />{' '}
-            <span className="hidden sm:inline">Comment</span>
-          </button>
-          <button className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:bg-gray-100 p-1 sm:p-2 rounded-md w-full justify-center text-xs sm:text-sm">
-            <FaArrowsRotate className="w-3 h-3 sm:w-4 sm:h-4" />{' '}
-            <span className="hidden sm:inline">Repost</span>
-          </button>
-          <button
-            onClick={handleShare}
-            disabled={isSharing}
-            className={`flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 rounded-md w-full justify-center text-xs sm:text-sm transition-colors ${
-              isSharing ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <FaLocationArrow className="w-3 h-3 sm:w-4 sm:h-4" />{' '}
-            <span className="hidden sm:inline">{isSharing ? 'Sending...' : 'Send'}</span>
-          </button>
-        </div>
-
-        {/* Comments Section */}
-        {showComments && (
+      {/* Comments Section */}
+      {showComments && (
+        <div className="border-t border-gray-100">
           <CommentSection
             postId={post._id}
             commentsCount={commentsCount}
             onCommentsCountUpdate={setCommentsCount}
           />
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </PostCard>
   );
 };
 

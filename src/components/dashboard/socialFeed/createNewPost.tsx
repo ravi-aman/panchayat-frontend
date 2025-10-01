@@ -10,6 +10,7 @@ import MediaEditorModal from './MediaEditorModal';
 import CreateEventPostModal from './CreateEventPostModal'; // Import the new modal
 import LocationPicker from '../../common/LocationPicker';
 import { LocationInfo } from '../../../services/LocationService';
+import DynamicImageGrid from '../../common/DynamicImageGrid';
 
 interface PollData {
   question: string;
@@ -112,7 +113,12 @@ const CreatePostModal: React.FC<{
         if (f instanceof File) {
           handleFileUpload(f);
         } else if (typeof f === 'string' && f.length) {
-          setMediaPreviews((p) => [...p, f]);
+          setMediaPreviews((prevPreviews) => {
+            if (prevPreviews.includes(f)) {
+              return prevPreviews; // Don't add duplicate
+            }
+            return [...prevPreviews, f];
+          });
           setUploadedFilesInfo((u) => [
             ...u,
             {
@@ -140,7 +146,12 @@ const CreatePostModal: React.FC<{
   }, [initialMediaFiles?.length, eventPostData?.placeholderImageUrl]);
 
   const handleFileUpload = async (file: File) => {
-    const isDuplicate = mediaFiles.some((f) => f.name === file.name && f.size === file.size);
+    // Check for duplicates more robustly
+    const isDuplicate = mediaFiles.some((f) => 
+      f.name === file.name && 
+      f.size === file.size && 
+      f.lastModified === file.lastModified
+    );
     if (isDuplicate) return;
 
     const preview = file.type.startsWith('image/')
@@ -151,7 +162,14 @@ const CreatePostModal: React.FC<{
         })
       : URL.createObjectURL(file);
 
-    setMediaPreviews((p) => [...p, preview]);
+    // Check if this preview URL already exists
+    setMediaPreviews((prevPreviews) => {
+      if (prevPreviews.includes(preview)) {
+        return prevPreviews; // Don't add duplicate
+      }
+      return [...prevPreviews, preview];
+    });
+    
     setMediaFiles((m) => [...m, file]);
 
     try {
@@ -221,7 +239,11 @@ const CreatePostModal: React.FC<{
         }),
       );
 
-      setMediaPreviews((prev) => [...prev, ...previews]);
+      setMediaPreviews((prevPreviews) => {
+        // Filter out duplicates before adding new previews
+        const newPreviews = previews.filter(preview => !prevPreviews.includes(preview));
+        return [...prevPreviews, ...newPreviews];
+      });
       setMediaFiles((prev) => [...prev, ...orderedFiles]);
 
       const results = await uploadFilesWithQueue(orderedFiles, {
@@ -589,71 +611,17 @@ const CreatePostModal: React.FC<{
           )}
 
           {mediaPreviews.length > 0 && (
-            <div className="bg-gray-50 rounded-xl p-4">
-              {mediaPreviews.length === 1 ? (
-                <div className="rounded-xl overflow-hidden shadow-sm">
-                  {mediaPreviews[0].startsWith('data:image') ||
-                  mediaPreviews[0].startsWith('blob:') ? (
-                    <img
-                      src={mediaPreviews[0]}
-                      alt="preview"
-                      className="w-full max-h-[300px] object-cover"
-                    />
-                  ) : (
-                    <video
-                      src={mediaPreviews[0]}
-                      controls
-                      className="w-full max-h-[300px] object-cover"
-                    />
-                  )}
-                </div>
-              ) : (
-                <div className="grid gap-2 rounded-xl overflow-hidden">
-                  <div className="w-full">
-                    {mediaPreviews[0].startsWith('data:image') ||
-                    mediaPreviews[0].startsWith('blob:') ? (
-                      <img
-                        src={mediaPreviews[0]}
-                        alt="preview-0"
-                        className="w-full h-40 object-cover rounded-lg shadow-sm"
-                      />
-                    ) : (
-                      <video
-                        src={mediaPreviews[0]}
-                        controls
-                        className="w-full h-40 object-cover rounded-lg shadow-sm"
-                      />
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {mediaPreviews.slice(1, 3).map((preview, idx) => (
-                      <div key={idx + 1} className="relative">
-                        {preview.startsWith('data:image') || preview.startsWith('blob:') ? (
-                          <img
-                            src={preview}
-                            alt={`preview-${idx + 1}`}
-                            className="w-full h-20 object-cover rounded-lg shadow-sm"
-                          />
-                        ) : (
-                          <video
-                            src={preview}
-                            controls
-                            className="w-full h-20 object-cover rounded-lg shadow-sm"
-                          />
-                        )}
-                        {idx === 1 && mediaPreviews.length > 3 && (
-                          <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center">
-                            <span className="text-white text-lg font-semibold">
-                              +{mediaPreviews.length - 3}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <DynamicImageGrid
+              images={mediaPreviews.map((preview, index) => ({
+                url: preview,
+                alt: `Preview ${index + 1}`,
+                filename: `preview-${index + 1}`,
+              }))}
+              className="bg-gray-50 rounded-xl p-4"
+              showHoverEffects={false}
+              maxHeight="400px"
+              borderRadius="12px"
+            />
           )}
         </div>
 
