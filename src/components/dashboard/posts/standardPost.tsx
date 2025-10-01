@@ -14,7 +14,6 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { CommentSection } from '../comments';
 import { useNavigate } from 'react-router-dom';
 import { checkRelationship, followUser, unfollowUser } from '../../../utils/followUtils';
-import { getLocationPreview } from '../../../utils/locationUtils';
 
 // --- TYPE DEFINITIONS ---
 interface PostProps {
@@ -44,10 +43,10 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
   // Check relationship on component mount
   useEffect(() => {
     const checkFollowRelationship = async () => {
-      if (!activeProfile?._id || !post.author._id) return;
+      if (!activeProfile?._id || !post.author?._id) return;
 
       // Don't show follow button for own posts
-      if (activeProfile._id === post.author._id) {
+      if (activeProfile._id === post.author?._id) {
         setShowFollowButton(false);
         return;
       }
@@ -60,22 +59,22 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
     };
 
     checkFollowRelationship();
-  }, [activeProfile?._id, post.author._id]);
+  }, [activeProfile?._id, post.author?._id]);
 
   // Handle follow/unfollow action
   const handleFollowToggle = async () => {
-    if (!activeProfile?._id || !post.author._id || isFollowLoading) return;
+    if (!activeProfile?._id || !post.author?._id || isFollowLoading) return;
 
     try {
       setIsFollowLoading(true);
 
       if (isFollowing) {
-        const success = await unfollowUser(activeProfile._id, post.author._id);
+        const success = await unfollowUser(activeProfile._id, post.author!._id);
         if (success) {
           setIsFollowing(false);
         }
       } else {
-        const success = await followUser(activeProfile._id, post.author._id);
+        const success = await followUser(activeProfile._id, post.author!._id);
         if (success) {
           setIsFollowing(true);
         }
@@ -119,22 +118,24 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
 
   // Helper function to get author display name
   const getAuthorName = () => {
+    if (!post.author) return 'Anonymous';
     if (post.author.type === 'user' && post.author.user) {
       return `${post.author.user.firstName} ${post.author.user.lastName}`;
     }
     if (post.author.type === 'company' && post.author.company) {
       return post.author.company.name;
     }
-    return post.author.username;
+    return post.author.username || 'Unknown User';
   };
 
   // Helper function to get author image
   const getAuthorImage = () => {
-    return post.author.image;
+    return post.author?.image || '/logo.png';
   };
 
   // Helper function to get profile link based on author type
   const getAuthorProfileLink = () => {
+    if (!post.author) return '#';
     if (post.author.type === 'user') {
       return `/user/${post.author.username}`;
     }
@@ -290,10 +291,10 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
             >
               {getAuthorName()}
             </p>
-            <p className="text-xs sm:text-sm text-gray-500 truncate">{post.author.bio}</p>
+            <p className="text-xs sm:text-sm text-gray-500 truncate">{post.author?.bio || ''}</p>
             <p className="text-xs text-gray-500">{getTimeAgo()}</p>
           </div>
-          {showFollowButton && (
+          {showFollowButton && post.author && (
             <button
               onClick={handleFollowToggle}
               disabled={isFollowLoading}
@@ -350,7 +351,10 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
           <div className="mb-3 flex items-center gap-2 text-gray-600">
             <MapPin className="w-4 h-4 text-gray-500" />
             <span className="text-sm">
-              {getLocationPreview(post.location)}
+              {('name' in post.location && post.location.name) || 
+               post.location.address || 
+               post.location.country || 
+               'Unknown Location'}
             </span>
           </div>
         )}

@@ -580,7 +580,7 @@ const Dashboard: React.FC = () => {
           {isAuthenticated() && <CreatePost currentUser={user!} setPosts={setPosts} />}
           {posts.length > 0 &&
             posts.map((item: IPost) => {
-              if (item.postType === 'standard') {
+              if (item.postType === 'standard' || item.postType === 'civic_issue') {
                 return <StandardPost post={item} key={item._id} />;
               }
               return null;

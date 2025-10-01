@@ -51,7 +51,7 @@ export interface IPost {
   }; // Ref to 'Profile' - Profile ID of the author
 
   // Post Type Discriminator
-  postType: 'standard' | 'poll' | 'event' | 'document';
+  postType: 'standard' | 'poll' | 'event' | 'document' | 'civic_issue';
 
   // Type-Specific Data Fields
   poll?: IPoll;
@@ -77,8 +77,36 @@ export interface IPost {
   tags: string[];
   mentions: string[]; // Refs to 'Profile'
   location?: {
-    name: string;
+    name?: string;
     coordinates: [number, number];
+    address?: string;
+    country?: string;
+    type?: string;
+    accuracyMeters?: number;
+    altitude?: number;
+    terrain?: string;
+    landUse?: string;
+    populationDensity?: number;
+    nearbyLandmarks?: string[];
+    roadType?: string;
+    publicTransportNearby?: boolean;
+    h3Resolution?: number;
+    h3Index?: string;
+  } | {
+    type: string;
+    coordinates: [number, number];
+    address?: string;
+    country?: string;
+    accuracyMeters?: number;
+    altitude?: number;
+    terrain?: string;
+    landUse?: string;
+    populationDensity?: number;
+    nearbyLandmarks?: string[];
+    roadType?: string;
+    publicTransportNearby?: boolean;
+    h3Resolution?: number;
+    h3Index?: string;
   };
   linkPreview?: {
     url: string;
