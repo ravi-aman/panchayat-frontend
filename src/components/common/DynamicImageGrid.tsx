@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
 
 interface ImageItem {
@@ -31,7 +31,7 @@ interface ImageModalProps {
 }
 
 // Image Modal/Lightbox Component
-const ImageModal: React.FC<ImageModalProps> = ({
+const ImageModal: React.FC<ImageModalProps> = React.memo(({
   images,
   initialIndex,
   isOpen,
@@ -39,6 +39,24 @@ const ImageModal: React.FC<ImageModalProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Update current index when initialIndex changes
+  React.useEffect(() => {
+    if (isOpen) {
+      setCurrentIndex(initialIndex);
+      setIsLoading(true);
+    }
+  }, [initialIndex, isOpen]);
+
+  // Prevent body scroll when modal is open
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -67,137 +85,138 @@ const ImageModal: React.FC<ImageModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-95"
+      onClick={onClose}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
+      {/* Close Button */}
+      <button
         onClick={onClose}
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
+        className="absolute top-6 right-6 z-[10000] p-3 text-white hover:bg-white hover:bg-opacity-20 rounded-full transition-colors shadow-lg"
+        style={{ fontSize: '24px' }}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-60 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
-        >
-          <X className="w-6 h-6" />
-        </button>
+        <X className="w-8 h-8" />
+      </button>
 
-        {/* Navigation Buttons */}
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePrevious();
-              }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-60 p-3 text-white hover:bg-white/20 rounded-full transition-colors"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNext();
-              }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-60 p-3 text-white hover:bg-white/20 rounded-full transition-colors"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </button>
-          </>
-        )}
-
-        {/* Image Counter */}
-        {images.length > 1 && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-60 px-3 py-1 bg-black/50 text-white text-sm rounded-full">
-            {currentIndex + 1} of {images.length}
-          </div>
-        )}
-
-        {/* Main Image */}
-        <motion.div
-          key={currentIndex}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="relative max-w-full max-h-full p-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-          
-          <img
-            src={images[currentIndex].url}
-            alt={images[currentIndex].alt || `Image ${currentIndex + 1}`}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            onLoad={() => setIsLoading(false)}
-            onError={() => setIsLoading(false)}
-          />
-        </motion.div>
-
-        {/* Action Bar */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-60 flex items-center gap-2 px-4 py-2 bg-black/50 rounded-full">
+      {/* Navigation Buttons */}
+      {images.length > 1 && (
+        <>
           <button
-            onClick={handleDownload}
-            className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
-            title="Download"
-          >
-            <Download className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => {
-              navigator.share?.({
-                url: images[currentIndex].url,
-                title: 'Shared Image',
-              });
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePrevious();
             }}
-            className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
-            title="Share"
+            className="absolute left-6 top-1/2 transform -translate-y-1/2 z-[10000] p-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full transition-colors shadow-lg"
           >
-            <Share2 className="w-5 h-5" />
+            <ChevronLeft className="w-10 h-10" />
           </button>
-        </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
+            className="absolute right-6 top-1/2 transform -translate-y-1/2 z-[10000] p-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full transition-colors shadow-lg"
+          >
+            <ChevronRight className="w-10 h-10" />
+          </button>
+        </>
+      )}
 
-        {/* Thumbnail Strip for multiple images */}
-        {images.length > 1 && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-60 flex gap-2 px-4 py-2 bg-black/50 rounded-full max-w-md overflow-x-auto">
-            {images.map((image, index) => (
-              <button
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentIndex(index);
-                  setIsLoading(true);
-                }}
-                className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
-                  index === currentIndex
-                    ? 'border-white scale-110'
-                    : 'border-transparent hover:border-white/50'
-                }`}
-              >
-                <img
-                  src={image.url}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
+      {/* Image Counter */}
+      {images.length > 1 && (
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-[10000] px-4 py-2 bg-black bg-opacity-70 text-white text-lg font-medium rounded-full shadow-lg">
+          {currentIndex + 1} of {images.length}
+        </div>
+      )}
+
+      {/* Main Image Container */}
+      <div
+        className="relative flex items-center justify-center p-6 max-w-full max-h-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
-      </motion.div>
-    </AnimatePresence>
+        
+        <img
+          src={images[currentIndex].url}
+          alt={images[currentIndex].alt || `Image ${currentIndex + 1}`}
+          className="max-w-[90vw] max-h-[90vh] object-contain shadow-2xl"
+          onLoad={() => setIsLoading(false)}
+          onError={() => setIsLoading(false)}
+        />
+      </div>
+
+      {/* Action Bar */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[10000] flex items-center gap-3 px-6 py-3 bg-black bg-opacity-70 rounded-full shadow-lg">
+        <button
+          onClick={handleDownload}
+          className="p-3 text-white hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+          title="Download"
+        >
+          <Download className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => {
+            navigator.share?.({
+              url: images[currentIndex].url,
+              title: 'Shared Image',
+            });
+          }}
+          className="p-3 text-white hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+          title="Share"
+        >
+          <Share2 className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Thumbnail Strip for multiple images */}
+      {images.length > 1 && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-[10000] flex gap-3 px-6 py-3 bg-black bg-opacity-70 rounded-full max-w-[90vw] overflow-x-auto scrollbar-hide">
+          {images.map((image, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex(index);
+                setIsLoading(true);
+              }}
+              className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-3 transition-all ${
+                index === currentIndex
+                  ? 'border-white scale-110'
+                  : 'border-transparent hover:border-white hover:border-opacity-50'
+              }`}
+            >
+              <img
+                src={image.url}
+                alt={`Thumbnail ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>,
+    document.body
   );
-};
+});
 
 // Main Dynamic Image Grid Component
-const DynamicImageGrid: React.FC<DynamicImageGridProps> = ({
+const DynamicImageGrid: React.FC<DynamicImageGridProps> = React.memo(({
   images,
   className = '',
   onImageClick,
@@ -283,7 +302,7 @@ const DynamicImageGrid: React.FC<DynamicImageGridProps> = ({
         }}
       >
         {displayImages.map((image, index) => (
-          <motion.div
+          <div
             key={index}
             className={`
               ${items[index]} 
@@ -292,8 +311,6 @@ const DynamicImageGrid: React.FC<DynamicImageGridProps> = ({
               ${showHoverEffects ? 'transition-all duration-300 hover:scale-[1.02]' : ''}
             `}
             onClick={() => handleImageClick(index)}
-            whileHover={showHoverEffects ? { scale: 1.02 } : {}}
-            whileTap={{ scale: 0.98 }}
           >
             <img
               src={image.url}
@@ -333,20 +350,23 @@ const DynamicImageGrid: React.FC<DynamicImageGridProps> = ({
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Image Modal */}
-      <ImageModal
-        images={uniqueImages}
-        initialIndex={selectedImageIndex || 0}
-        isOpen={selectedImageIndex !== null}
-        onClose={() => setSelectedImageIndex(null)}
-      />
+      {selectedImageIndex !== null && (
+        <ImageModal
+          key="image-modal"
+          images={uniqueImages}
+          initialIndex={selectedImageIndex}
+          isOpen={true}
+          onClose={() => setSelectedImageIndex(null)}
+        />
+      )}
     </>
   );
-};
+});
 
 export default DynamicImageGrid;
 export type { ImageItem, DynamicImageGridProps };

@@ -1,6 +1,6 @@
 // LinkedInPost.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { IPost } from '../../../types/postTypes';
 import PostService from '../../../services/PostService';
@@ -178,6 +178,19 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
     return otherUserNames;
   };
 
+  // Memoize images array to prevent unnecessary re-renders
+  const memoizedImages = useMemo(() => {
+    if (!post.image || post.image.length === 0) return [];
+    
+    return post.image.map(img => ({
+      url: img.url,
+      alt: img.alt || `Post image`,
+      filename: img.filename,
+      width: 1200,
+      height: 800
+    }));
+  }, [post.image]);
+
   // Handle like/unlike toggle
   const handleLikeToggle = async () => {
     if (!activeProfile?._id) {
@@ -306,15 +319,9 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
       </PostCard.Content>
 
       {/* Dynamic Image Grid */}
-      {post.image && post.image.length > 0 && (
+      {memoizedImages.length > 0 && (
         <DynamicImageGrid
-          images={post.image.map(img => ({
-            url: img.url,
-            alt: img.alt || `Post image`,
-            filename: img.filename,
-            width: 1200,
-            height: 800
-          }))}
+          images={memoizedImages}
           className=""
           showHoverEffects={true}
           maxHeight="500px"
