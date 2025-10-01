@@ -281,6 +281,20 @@ const CreatePostModal: React.FC<{
       return;
     }
 
+    // Require images for standard posts
+    if (!isPollPost && !isEventPost && uploadedFilesInfo.length === 0) {
+      toast.open({
+        message: {
+          heading: 'Image Required',
+          content: 'Please add at least one image to describe your issue.',
+        },
+        duration: 5000,
+        position: 'top-center',
+        color: 'warning',
+      });
+      return;
+    }
+
     if (isPollPost && !content.trim()) {
       setContent(pollData?.question || 'Poll');
     }
@@ -467,7 +481,7 @@ const CreatePostModal: React.FC<{
                   ? 'Add a description for your poll...'
                   : isEventPost
                     ? 'Add details for your event...'
-                    : "What's on your mind?"
+                    : "Post your issue (image required)"
               }
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -644,6 +658,13 @@ const CreatePostModal: React.FC<{
         </div>
 
         {/* Footer */}
+        {!isPollPost && !isEventPost && uploadedFilesInfo.length === 0 && (
+          <div className="px-6 py-2 bg-yellow-50 border-t border-yellow-200">
+            <p className="text-xs text-yellow-700 text-center">
+              📷 Please add at least one image to describe your issue
+            </p>
+          </div>
+        )}
         <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center space-x-1">
             <button
@@ -710,7 +731,7 @@ const CreatePostModal: React.FC<{
 
           <button
             onClick={handleCreatePost}
-            disabled={(!content.trim() && !isPollPost && !isEventPost) || isUploading}
+            disabled={(!content.trim() && !isPollPost && !isEventPost) || (!isPollPost && !isEventPost && uploadedFilesInfo.length === 0) || isUploading}
             className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading

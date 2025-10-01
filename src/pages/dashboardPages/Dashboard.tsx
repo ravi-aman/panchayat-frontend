@@ -194,7 +194,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ currentUser, setPosts }) => {
               whileHover={{ scale: 1.005 }}
               whileTap={{ scale: 0.995 }}
             >
-              <span className="text-gray-600">{`What's on your mind, ${getUserFullName(currentUser)}?`}</span>
+              <span className="text-gray-600">{`Post your issue, ${getUserFullName(currentUser)}? (image required)`}</span>
             </motion.button>
           </div>
         </div>
