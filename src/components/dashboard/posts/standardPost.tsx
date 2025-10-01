@@ -7,12 +7,14 @@ import { FaArrowsRotate } from 'react-icons/fa6';
 import { FaLocationArrow } from 'react-icons/fa';
 import { FaCheck } from 'react-icons/fa6';
 import { FaPlus } from 'react-icons/fa6';
+import { MapPin } from 'lucide-react';
 import { IPost } from '../../../types/postTypes';
 import PostService from '../../../services/PostService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CommentSection } from '../comments';
 import { useNavigate } from 'react-router-dom';
 import { checkRelationship, followUser, unfollowUser } from '../../../utils/followUtils';
+import { getLocationPreview } from '../../../utils/locationUtils';
 
 // --- TYPE DEFINITIONS ---
 interface PostProps {
@@ -342,6 +344,16 @@ const StandardPost: React.FC<PostProps> = ({ post }) => {
             )}
           </p>
         </div>
+
+        {/* Location Display */}
+        {post.location && (
+          <div className="mb-3 flex items-center gap-2 text-gray-600">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span className="text-sm">
+              {getLocationPreview(post.location)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Image Grid */}

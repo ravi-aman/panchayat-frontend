@@ -1,6 +1,5 @@
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
-import { PostCard } from './PostCard';
 import { ExtendedPost, ProfileResponse } from './types';
 
 interface PostsSectionProps {
@@ -8,7 +7,7 @@ interface PostsSectionProps {
   profileData: ProfileResponse['profile'] | null;
 }
 
-export const PostsSection: React.FC<PostsSectionProps> = ({ posts, profileData }) => {
+export const PostsSection: React.FC<PostsSectionProps> = ({ posts }) => {
   if (posts.length === 0) {
     return (
       <div className="p-12 text-center bg-white rounded-lg shadow-sm">
@@ -27,12 +26,4 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, profileData }
       </div>
     );
   }
-
-  return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {posts.map((post) => (
-        <PostCard key={post._id} post={post} profileData={profileData} />
-      ))}
-    </div>
-  );
 };

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PANCHAYAT_BRANDING } from '../../config/branding';
 
 function MeetStellar() {
   const [isVisible, setIsVisible] = useState(false);
@@ -26,7 +25,7 @@ function MeetStellar() {
   }, []);
 
   return (
-    <div ref={sectionRef} className="md:px-25 pb-20 flex justify-center items-center w-full">
+    <div ref={sectionRef} className="px-25 pb-20 flex justify-center items-center w-full">
       <motion.div
         className="flex flex-col md:flex-row items-center justify-between gap-10 p-6 md:p-12"
         initial={{ opacity: 0, y: 50 }}
@@ -39,29 +38,29 @@ function MeetStellar() {
           animate={isVisible ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
         >
-          <h1 className="text-2xl md:text-xl font-semibold text-blue-600 mb-4">Meet {PANCHAYAT_BRANDING.name}</h1>
+          <h1 className="text-2xl md:text-xl font-semibold text-purple-600 mb-4">Meet Stellar</h1>
           <div>
             <h2 className="text-3xl md:text-5xl font-semibold mb-4">
-              {PANCHAYAT_BRANDING.tagline}
+              Provide powerful solutions at all times
             </h2>
             <p className="text-gray-600 text-base md:text-lg">
-              {PANCHAYAT_BRANDING.mission}
+              Lorem ipsum dolor sit amet consectetur. Sit arcu cursus ultricies nulla tellus tempor
+              congue. Mauris ut arcu ornare eu dignissim odio.
             </p>
           </div>
 
-          <ul className="mt-6 space-y-4 text-blue">
-            <FeatureItem text="Mobile-first interface with photo, video, voice, and location tagging" />
-            <FeatureItem text="Real-time map showing live issue status across communities" />
-            <FeatureItem text="AI-powered issue classification and duplicate detection" />
-            <FeatureItem text="Transparent government dashboard with public accountability" />
+          <ul className="mt-6 space-y-4">
+            <FeatureItem text="Share the extra text you want to add as a feature." />
+            <FeatureItem text="Add your feature text here." />
+            <FeatureItem text="Add the text you'd like to include as a feature." />
           </ul>
 
           <div className="mt-6">
             <a
-              href="/dashboard/feed"
-              className="flex items-center gap-2 min-w-[250px] border px-6 py-4 rounded-full shadow-md transition-all w-50 hover:text-gray-600"
+              href="#"
+              className="flex items-center gap-2 border px-6 py-4 rounded-full shadow-md transition-all w-50 hover:text-gray-600"
             >
-              {PANCHAYAT_BRANDING.cta.demo}
+              Get Free Trial
               <img src="./landing/crossarrow.png" alt="Arrow" className="w-5 h-5" />
             </a>
           </div>

@@ -7,10 +7,10 @@ import {
   CompanyAboutSection,
   PostsSection,
   ConnectSidebar,
-  ExtendedPost,
   ProfileResponse,
 } from '../../../components/profile';
 import { connectionService, ConnectionSuggestion } from '../../../components/connections';
+import { IPost } from '../../../types/postTypes';
 
 const CompanyProfile: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -118,9 +118,7 @@ const CompanyProfile: React.FC = () => {
   }, [user?._id]);
 
   // Get posts from fetched profile data only
-  const profilePosts = Array.isArray(fetchedProfile?.posts)
-    ? (fetchedProfile.posts as ExtendedPost[])
-    : [];
+  const profilePosts: IPost[] = [];
 
   // Show loading state
   if (loading) {

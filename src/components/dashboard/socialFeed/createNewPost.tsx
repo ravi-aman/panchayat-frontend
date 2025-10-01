@@ -1,4 +1,4 @@
-import { BarChart, FileText, X, Camera, Calendar } from 'lucide-react';
+import { BarChart, FileText, X, Camera, Calendar, MapPin } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getUserFullName, User } from '../../../types/types';
@@ -8,6 +8,8 @@ import { uploadFilesWithQueue, FileUploadResult } from '../../../utils/fileUploa
 import PostService, { CreateEventData } from '../../../services/PostService';
 import MediaEditorModal from './MediaEditorModal';
 import CreateEventPostModal from './CreateEventPostModal'; // Import the new modal
+import LocationPicker from '../../common/LocationPicker';
+import { LocationInfo } from '../../../services/LocationService';
 
 interface PollData {
   question: string;
@@ -50,6 +52,7 @@ const CreatePostModal: React.FC<{
   const [content, setContent] = useState<string>('');
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<LocationInfo | null>(null);
 
   const isPollPost = !!pollData;
   const [isEventPost, setIsEventPost] = useState(!!initialEventData);
@@ -308,6 +311,18 @@ const CreatePostModal: React.FC<{
         privacy: 'public',
       };
 
+      // Add location if selected
+      if (selectedLocation) {
+        postData.location = {
+          name: selectedLocation.name,
+          coordinates: selectedLocation.coordinates,
+          address: selectedLocation.address,
+          city: selectedLocation.city,
+          state: selectedLocation.state,
+          country: selectedLocation.country,
+        };
+      }
+
       if (uploadedFilesInfo.length > 0) {
         postData.image = PostService.convertFilesToPostImages(uploadedFilesInfo);
       }
@@ -461,6 +476,31 @@ const CreatePostModal: React.FC<{
             {content.length > 0 && (
               <div className="absolute bottom-3 right-3 text-xs text-gray-400">
                 {content.length} characters
+              </div>
+            )}
+          </div>
+
+          {/* Location Picker */}
+          <div className="space-y-2" data-location-picker>
+            <LocationPicker
+              selectedLocation={selectedLocation}
+              onLocationSelect={setSelectedLocation}
+              placeholder="Add location to your post..."
+              className="w-full"
+              showCurrentLocationButton={true}
+            />
+            {selectedLocation && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <MapPin className="w-4 h-4 text-blue-600" />
+                <span className="text-sm text-blue-800 font-medium">
+                  Post will include location: {selectedLocation.name}
+                </span>
+                <button
+                  onClick={() => setSelectedLocation(null)}
+                  className="ml-auto p-1 hover:bg-blue-200 rounded-full transition-colors"
+                >
+                  <X className="w-3 h-3 text-blue-600" />
+                </button>
               </div>
             )}
           </div>
@@ -627,6 +667,25 @@ const CreatePostModal: React.FC<{
                 onChange={handleFileChange}
               />
             </label>
+
+            {/* Location button - Always show for all post types */}
+            <button
+              onClick={() => {
+                // This button can be used to scroll to the location picker or highlight it
+                const locationPicker = document.querySelector('[data-location-picker]');
+                if (locationPicker) {
+                  locationPicker.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 ${
+                selectedLocation ? 'text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              <MapPin className={`h-5 w-5 ${selectedLocation ? 'text-blue-500' : 'text-gray-500'} hover:text-gray-700`} />
+              <span className={`text-sm font-medium ${selectedLocation ? 'text-blue-600' : 'text-gray-600'} hover:text-gray-700`}>
+                {selectedLocation ? 'Location added' : 'Location'}
+              </span>
+            </button>
 
             {!isPollPost && !isEventPost && (
               <button

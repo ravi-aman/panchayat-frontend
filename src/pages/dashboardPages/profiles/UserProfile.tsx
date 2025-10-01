@@ -7,11 +7,11 @@ import {
   AboutSection,
   PostsSection,
   ConnectSidebar,
-  ExtendedPost,
   ProfileResponse,
 } from '../../../components/profile';
 import { connectionService, ConnectionSuggestion } from '../../../components/connections';
 import api from '../../../utils/api';
+import { IPost } from '../../../types/postTypes';
 
 const UserProfile: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -102,9 +102,7 @@ const UserProfile: React.FC = () => {
   }, [user?._id]);
 
   // Get posts from fetched profile data only
-  const profilePosts = Array.isArray(fetchedProfile?.posts)
-    ? (fetchedProfile.posts as ExtendedPost[])
-    : [];
+  const profilePosts: IPost[] = [];
 
   // Show loading state
   if (loading) {
