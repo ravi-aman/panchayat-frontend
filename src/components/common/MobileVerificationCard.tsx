@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Phone, Shield, X, AlertTriangle } from 'lucide-react';
+import { Phone, Shield, X } from 'lucide-react';
 import { useMobileVerification } from '../../hooks/useMobileVerification';
 
 interface MobileVerificationCardProps {
