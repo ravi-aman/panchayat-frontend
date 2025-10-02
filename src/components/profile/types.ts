@@ -1,4 +1,4 @@
-import { Post, User } from '../../types/types';
+import { IPost, User } from '../../types/types';
 
 export interface NetworkSuggestion {
   email: string;
@@ -14,7 +14,7 @@ export interface NetworkSuggestion {
   ];
 }
 
-export interface ExtendedPost extends Post {
+export interface ExtendedPost extends IPost {
   hasIcon?: boolean;
   author: User & {
     name?: string; // For company posts
@@ -52,7 +52,7 @@ export interface ProfileResponse {
     };
     followers: any[];
     following: any[];
-    posts: Post[];
+    posts: IPost[];
     stats: {
       followersCount: number;
       followingCount: number;

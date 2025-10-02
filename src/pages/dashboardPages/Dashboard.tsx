@@ -13,6 +13,7 @@ import { useToast } from '../../contexts/toast/toastContext';
 import PostService from '../../services/PostService';
 import { IPost } from '../../types/postTypes';
 import StandardPost from '../../components/dashboard/posts/standardPost';
+import MobileVerificationCard from '../../components/common/MobileVerificationCard';
 
 interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'icon';
@@ -578,6 +579,14 @@ const Dashboard: React.FC = () => {
           transition={{ duration: 0.5 }}
         >
           {isAuthenticated() && <CreatePost currentUser={user!} setPosts={setPosts} />}
+          
+          {/* Mobile Verification Card */}
+          <MobileVerificationCard 
+            variant="card" 
+            showDismiss={true}
+            className="mb-6"
+          />
+          
           {posts.length > 0 &&
             posts.map((item: IPost) => {
               if (item.postType === 'standard' || item.postType === 'civic_issue') {

@@ -33,6 +33,7 @@ import HeatmapAnalyticsPage from './pages/dashboardPages/heatmap/HeatmapAnalytic
 // import { useAuth } from './contexts/AuthContext';
 import TermsOfService from './pages/TermsOfService.tsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.tsx';
+import MobileVerificationWrapper from './components/common/MobileVerificationWrapper.tsx';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,8 @@ const App: React.FC = () => {
         </div>
       )}
       <Router>
-        <Routes>
+        <MobileVerificationWrapper>
+          <Routes>
           <Route
             index
             path="/"
@@ -173,6 +175,7 @@ const App: React.FC = () => {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </MobileVerificationWrapper>
       </Router>
     </>
   );

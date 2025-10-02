@@ -4,12 +4,19 @@ import Tabs from '../../components/dashboard/Tabs';
 import MobileNavbar from '../../components/dashboard/MobileNavbar';
 import { Outlet } from 'react-router-dom';
 import { MapProvider } from '../../contexts/MapContext';
+import MobileVerificationCard from '../../components/common/MobileVerificationCard';
 
 const DashboardLayout = () => {
   return (
     <MapProvider>
       <div className="flex h-full bg-gray-100">
         <div className="flex-1 flex flex-col">
+          {/* Mobile Verification Banner */}
+          <MobileVerificationCard 
+            variant="banner" 
+            showDismiss={false}
+          />
+          
           <div className="bg-white hidden md:block">
             <DashboardNavbar />
           </div>

@@ -31,6 +31,7 @@ interface AuthContextState {
   UpdateActiveProfile?: (newProfile: Profile) => void;
   activeProfile?: Profile | null;
   updateUserPhoto?: (photoUrl: string) => Promise<User> | Error;
+  refreshUserData?: () => Promise<void>;
 }
 
 const initialAuthState: AuthContextState = {
@@ -297,6 +298,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshUserData = async () => {
+    try {
+      console.log('🔄 Refreshing user data from backend...');
+      const response = await api.get('/api/v1/auth/me');
+      const freshUserData = response.data.user;
+      console.log('🔄 Fresh user data received:', freshUserData);
+      
+      setUser(freshUserData);
+      localStorage.setItem('user', JSON.stringify(freshUserData));
+      
+      // Also refresh active profile if needed
+      if (freshUserData.profileIds && freshUserData.profileIds.length > 0) {
+        const profile = freshUserData.profileIds[0];
+        if (profile.type === 'user') {
+          if (!profile.username || profile.username.trim() === '') {
+            profile.username = freshUserData.firstName + ' ' + freshUserData.lastName || 'User';
+          }
+          if (!profile.image || profile.image.trim() === '') {
+            profile.image = freshUserData.photo || '';
+          }
+        }
+        setActiveProfile(profile);
+        localStorage.setItem('activeProfile', JSON.stringify(profile));
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      throw error;
+    }
+  };
+
   const isAuthenticated = (): boolean => {
     return !!localStorage.getItem('accessToken');
   };
@@ -354,6 +385,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     UpdateActiveProfile,
     activeProfile: activeProfile,
     updateUserPhoto,
+    refreshUserData,
   };
 
   if (loading) {

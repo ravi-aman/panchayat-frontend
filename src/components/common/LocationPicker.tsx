@@ -24,7 +24,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [searchResults, setSearchResults] = useState<LocationInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingCurrentLocation, setIsGettingCurrentLocation] = useState(false);
-  const [hasUserPermission, setHasUserPermission] = useState<boolean | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,9 +42,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   useEffect(() => {
     // Check location permission on mount
-    LocationService.requestLocationPermission().then((permission) => {
-      setHasUserPermission(permission === 'granted');
-    });
+    LocationService.requestLocationPermission();
   }, []);
 
   useEffect(() => {

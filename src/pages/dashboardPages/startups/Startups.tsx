@@ -24,7 +24,6 @@ import {
   Target,
   WifiOff,
   ServerCrash,
-  Plus,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -739,7 +738,6 @@ const Startups = () => {
   });
 
   const [appliedFilters, setAppliedFilters] = useState(filters);
-  const { isAuthenticated } = useAuth();
 
   // Generate SEO data based on current state
   const seoData = useMemo(() => {

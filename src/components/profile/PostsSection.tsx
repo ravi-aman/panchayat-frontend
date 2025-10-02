@@ -1,9 +1,10 @@
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
-import { ExtendedPost, ProfileResponse } from './types';
+import { IPost } from '../../types/postTypes';
+import { ProfileResponse } from './types';
 
 interface PostsSectionProps {
-  posts: ExtendedPost[];
+  posts: IPost[];
   profileData: ProfileResponse['profile'] | null;
 }
 

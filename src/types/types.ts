@@ -12,6 +12,7 @@ export interface User {
   age?: number;
   _id?: string;
   phone: string;
+  phoneVerified?: boolean;
   googleId?: string;
   profileIds?: string[] | Profile[];
   refreshToken?: string;
