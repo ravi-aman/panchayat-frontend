@@ -35,46 +35,7 @@ const MobileVerificationCard: React.FC<MobileVerificationCardProps> = ({
     showVerificationModal();
   };
 
-  const renderBanner = () => (
-    <motion.div
-      initial={{ opacity: 0, y: -50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      className={`bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 ${className}`}
-    >
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          <div>
-            <p className="font-medium">
-              {hasPhone ? 'Verify your phone number' : 'Add your phone number'}
-            </p>
-            <p className="text-sm text-orange-100">
-              Secure your account and unlock all features
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={handleVerifyClick}
-            className="bg-white text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-50 transition-colors text-sm"
-          >
-            {hasPhone ? 'Verify Now' : 'Add Phone'}
-          </button>
-          
-          {showDismiss && onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
+  
 
   const renderCard = () => (
     <motion.div
@@ -185,7 +146,9 @@ const MobileVerificationCard: React.FC<MobileVerificationCardProps> = ({
 
   switch (variant) {
     case 'banner':
-      return renderBanner();
+      // return renderBanner();
+      console.log('🔍 Banner variant not implemented yet, defaulting to card');
+      break;
     case 'inline':
       return renderInline();
     default:
